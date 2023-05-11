@@ -1,7 +1,9 @@
 <template>
     <div class="row p-1">
-        <label :for="id" class="col-sm-2 col-form-label">{{label}}</label>
-        <div class="col-sm-10">
+        <label :for="id" class="col-sm-4 col-form-label">
+            <span v-if="required" class="text-danger">*</span> {{label}}
+        </label>
+        <div class="col-sm-8">
             <slot/>
         </div>
     </div>
@@ -13,6 +15,7 @@ export default {
     props: [
         'id',
         'label',
+        'required'
     ],
     data() {
         return {

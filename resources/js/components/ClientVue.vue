@@ -1,44 +1,63 @@
 <template>
     <div v-if="canClient" class="card">
         <form @submit.prevent="submitClient">
-            <div class="row">
+            <div class="row pb-1">
                 <div class="col-sm-6">
-                    <h1>Minha Conta</h1>
+                    <h1>Cadastro</h1>
                 </div>
                 <div class="col-sm-6 text-end">
-                    <button type="submit" class="btn btn-success">
-                        {{client.asaas_id ? 'Atualizar Cadastro' : 'Finalizar Cadastro e Liberar Pagamentos'}}
+                    <button v-if="!loading && edit" type="submit" class="btn btn-180 btn-success">
+                        {{client.asaas_id ? 'Salvar Alterações' : 'Finalizar Cadastro'}}
                     </button>
+                    <div v-if="!loading && !edit" @click="edit = true" class="btn btn-180 btn-primary">
+                        Atualizar Cadastro
+                    </div>
+                    <div v-if="loading" class="btn btn-180 btn-secondary">
+                        Processando...
+                    </div>
+                </div>
+                <div v-if="!client.asaas_id" class="col-sm-12 text-center alert alert-danger mt-2 mb-0">
+                    * Finalize o cadastro e libere todas funções de pagamento.
                 </div>
             </div>
 
+            <!-- Informações de Contato -->
             <form-row id="cpf_cnpj" label="CPF / CNPJ">
-                <input v-model="client.cpf_cnpj" id="cpf_cnpj" type="text" class="form-control" disabled>
+                <div class="pt-2">{{client.cpf_cnpj}}</div>
             </form-row>
-            <form-row id="name" label="* Nome">
-                <input v-model="client.name" id="name" type="text" class="form-control">
+            <form-row id="name" label="Nome" required="true">
+                <input v-if="edit" v-model="client.name" id="name" type="text" class="form-control">
+                <div v-if="!edit" class="pt-2">{{client.name}}</div>
             </form-row>
-            <form-row id="email" label="* E-mail">
-                <input v-model="client.email" id="email" type="text" class="form-control">
+            <form-row id="email" label="E-mail" required="true">
+                <input v-if="edit" v-model="client.email" id="email" placeholder="Ex: exemplo@email.com" type="text" class="form-control">
+                <div v-if="!edit" class="pt-2">{{client.email}}</div>
             </form-row>
-            <form-row id="phone" label="* Celular">
-                <input v-model="client.phone" id="phone" type="text" class="form-control">
+            <form-row id="phone" label="Celular" required="true">
+                <input v-if="edit" v-model="client.phone" id="phone" placeholder="Ex: 11911119999" type="number" class="form-control">
+                <div v-if="!edit" class="pt-2">{{client.phone}}</div>
             </form-row>
 
-            <form-row id="postal_code" label="* CEP">
-                <input v-model="client.postal_code" id="postal_code" type="text" class="form-control">
+            <!-- Endereço -->
+            <form-row id="postal_code" label="CEP" required="true">
+                <input v-if="edit" v-model="client.postal_code" id="postal_code" placeholder="Ex: 11111999" type="number" class="form-control">
+                <div v-if="!edit" class="pt-2">{{client.postal_code}}</div>
             </form-row>
-            <form-row id="address" label="* Endereço">
-                <input v-model="client.address" id="address" type="text" class="form-control">
+            <form-row id="address" label="Endereço" required="true">
+                <input v-if="edit" v-model="client.address" id="address" type="text" class="form-control">
+                <div v-if="!edit" class="pt-2">{{client.address}}</div>
             </form-row>
-            <form-row id="province" label="* Bairro">
-                <input v-model="client.province" id="province" type="text" class="form-control">
+            <form-row id="province" label="Bairro" required="true">
+                <input v-if="edit" v-model="client.province" id="province" type="text" class="form-control">
+                <div v-if="!edit" class="pt-2">{{client.province}}</div>
             </form-row>
-            <form-row id="address_number" label="* Número">
-                <input v-model="client.address_number" id="address_number" type="text" class="form-control">
+            <form-row id="address_number" label="Número" required="true">
+                <input v-if="edit" v-model="client.address_number" id="address_number" type="text" class="form-control">
+                <div v-if="!edit" class="pt-2">{{client.address_number}}</div>
             </form-row>
             <form-row id="complement" label="Complemento">
-                <input v-model="client.complement" id="complement" type="text" class="form-control">
+                <input v-if="edit" v-model="client.complement" id="complement" type="text" class="form-control">
+                <div v-if="!edit" class="pt-2">{{client.complement}}</div>
             </form-row>
         </form>
 
@@ -116,6 +135,7 @@ export default {
     data() {
         return {
             loading: false,
+            edit: true,
 
             canClient: false,
             client: {
@@ -219,9 +239,13 @@ export default {
         });
     },
     methods: {
+        emitSetClient(client){
+            bus.$emit('set-client', client);
+        },
         setClient(client){
             this.canClient = (client ? true : false);
             this.client = client;
+            this.edit = (this.client.asaas_id ? false : true);
         },
         emitCategories(event, data = null){
             bus.$emit('category-'+event, data);
@@ -266,18 +290,18 @@ export default {
             this.loading = true;
             axios.put('/api/clients/' + this.client.id, this.client)
                 .then(response => {
-
-                    console.log('SUCCESS', response.data);
-
-                    //$('#categoryModal').modal('hide');
-                    //this.fetchCategories();
-                    //this.emitCategories('updated');
+                    let message = (this.client.asaas_id
+                        ? 'Cadastro atualizado com sucesso!'
+                        : 'Cadastro finalizado com sucesso e pagamentos liberados!'
+                    );
+                    this.emitSetClient(response.data);
+                    alert(message);
                 })
                 .catch(error => {
                     let response = error.response;
                     switch (response.status){
                         case 422:
-                            alert('Verifique os erros no formulário:\n\n'+response.data);
+                            alert('VERIFIQUE OS ERROS NO FORMULÁRIO:\n\n'+response.data);
                             break;
 
                         default:

@@ -31,8 +31,11 @@
 
         button, .btn{
             color: white !important;
+            text-transform: uppercase;
         }
-
+        .btn-180{
+            min-width: 180px;
+        }
         .count, .count-null{
             background: #c8e6c9;
             color: #263238;
@@ -55,6 +58,8 @@
 
         .p-1{padding: 1rem !important;}
         .pt-0{padding-top: 0 !important;}
+        .pb-0{padding-bottom: 0 !important;}
+        .pb-1{padding-bottom: 1rem !important;}
 
         .cursor-pointer{
             cursor: pointer;

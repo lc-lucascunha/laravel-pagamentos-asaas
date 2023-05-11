@@ -1923,6 +1923,7 @@ __webpack_require__.r(__webpack_exports__);
   data: function data() {
     return {
       loading: false,
+      edit: true,
       canClient: false,
       client: {
         id: '',
@@ -2010,9 +2011,13 @@ __webpack_require__.r(__webpack_exports__);
     });
   },
   methods: {
+    emitSetClient: function emitSetClient(client) {
+      _eventBus__WEBPACK_IMPORTED_MODULE_0__["default"].$emit('set-client', client);
+    },
     setClient: function setClient(client) {
       this.canClient = client ? true : false;
       this.client = client;
+      this.edit = this.client.asaas_id ? false : true;
     },
     emitCategories: function emitCategories(event) {
       var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
@@ -2055,16 +2060,14 @@ __webpack_require__.r(__webpack_exports__);
       var _this3 = this;
       this.loading = true;
       axios.put('/api/clients/' + this.client.id, this.client).then(function (response) {
-        console.log('SUCCESS', response.data);
-
-        //$('#categoryModal').modal('hide');
-        //this.fetchCategories();
-        //this.emitCategories('updated');
+        var message = _this3.client.asaas_id ? 'Cadastro atualizado com sucesso!' : 'Cadastro finalizado com sucesso e pagamentos liberados!';
+        _this3.emitSetClient(response.data);
+        alert(message);
       })["catch"](function (error) {
         var response = error.response;
         switch (response.status) {
           case 422:
-            alert('Verifique os erros no formulário:\n\n' + response.data);
+            alert('VERIFIQUE OS ERROS NO FORMULÁRIO:\n\n' + response.data);
             break;
           default:
             alert(response.data);
@@ -2169,7 +2172,9 @@ __webpack_require__.r(__webpack_exports__);
   data: function data() {
     return {
       canClient: false,
-      client: null,
+      client: {
+        asaas_id: ''
+      },
       categories: [],
       products: [],
       product: {
@@ -2352,7 +2357,7 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: 'FormRow',
-  props: ['id', 'label'],
+  props: ['id', 'label', 'required'],
   data: function data() {
     return {};
   }
@@ -2384,47 +2389,39 @@ var render = function render() {
       }
     }
   }, [_c("div", {
-    staticClass: "row"
+    staticClass: "row pb-1"
   }, [_vm._m(0), _vm._v(" "), _c("div", {
     staticClass: "col-sm-6 text-end"
-  }, [_c("button", {
-    staticClass: "btn btn-success",
+  }, [!_vm.loading && _vm.edit ? _c("button", {
+    staticClass: "btn btn-180 btn-success",
     attrs: {
       type: "submit"
     }
-  }, [_vm._v("\n                        " + _vm._s(_vm.client.asaas_id ? "Atualizar Cadastro" : "Finalizar Cadastro e Liberar Pagamentos") + "\n                    ")])])]), _vm._v(" "), _c("form-row", {
+  }, [_vm._v("\n                        " + _vm._s(_vm.client.asaas_id ? "Salvar Alterações" : "Finalizar Cadastro") + "\n                    ")]) : _vm._e(), _vm._v(" "), !_vm.loading && !_vm.edit ? _c("div", {
+    staticClass: "btn btn-180 btn-primary",
+    on: {
+      click: function click($event) {
+        _vm.edit = true;
+      }
+    }
+  }, [_vm._v("\n                        Atualizar Cadastro\n                    ")]) : _vm._e(), _vm._v(" "), _vm.loading ? _c("div", {
+    staticClass: "btn btn-180 btn-secondary"
+  }, [_vm._v("\n                        Processando...\n                    ")]) : _vm._e()]), _vm._v(" "), !_vm.client.asaas_id ? _c("div", {
+    staticClass: "col-sm-12 text-center alert alert-danger mt-2 mb-0"
+  }, [_vm._v("\n                    * Finalize o cadastro e libere todas funções de pagamento.\n                ")]) : _vm._e()]), _vm._v(" "), _c("form-row", {
     attrs: {
       id: "cpf_cnpj",
       label: "CPF / CNPJ"
     }
-  }, [_c("input", {
-    directives: [{
-      name: "model",
-      rawName: "v-model",
-      value: _vm.client.cpf_cnpj,
-      expression: "client.cpf_cnpj"
-    }],
-    staticClass: "form-control",
-    attrs: {
-      id: "cpf_cnpj",
-      type: "text",
-      disabled: ""
-    },
-    domProps: {
-      value: _vm.client.cpf_cnpj
-    },
-    on: {
-      input: function input($event) {
-        if ($event.target.composing) return;
-        _vm.$set(_vm.client, "cpf_cnpj", $event.target.value);
-      }
-    }
-  })]), _vm._v(" "), _c("form-row", {
+  }, [_c("div", {
+    staticClass: "pt-2"
+  }, [_vm._v(_vm._s(_vm.client.cpf_cnpj))])]), _vm._v(" "), _c("form-row", {
     attrs: {
       id: "name",
-      label: "* Nome"
+      label: "Nome",
+      required: "true"
     }
-  }, [_c("input", {
+  }, [_vm.edit ? _c("input", {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -2445,12 +2442,15 @@ var render = function render() {
         _vm.$set(_vm.client, "name", $event.target.value);
       }
     }
-  })]), _vm._v(" "), _c("form-row", {
+  }) : _vm._e(), _vm._v(" "), !_vm.edit ? _c("div", {
+    staticClass: "pt-2"
+  }, [_vm._v(_vm._s(_vm.client.name))]) : _vm._e()]), _vm._v(" "), _c("form-row", {
     attrs: {
       id: "email",
-      label: "* E-mail"
+      label: "E-mail",
+      required: "true"
     }
-  }, [_c("input", {
+  }, [_vm.edit ? _c("input", {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -2460,6 +2460,7 @@ var render = function render() {
     staticClass: "form-control",
     attrs: {
       id: "email",
+      placeholder: "Ex: exemplo@email.com",
       type: "text"
     },
     domProps: {
@@ -2471,12 +2472,15 @@ var render = function render() {
         _vm.$set(_vm.client, "email", $event.target.value);
       }
     }
-  })]), _vm._v(" "), _c("form-row", {
+  }) : _vm._e(), _vm._v(" "), !_vm.edit ? _c("div", {
+    staticClass: "pt-2"
+  }, [_vm._v(_vm._s(_vm.client.email))]) : _vm._e()]), _vm._v(" "), _c("form-row", {
     attrs: {
       id: "phone",
-      label: "* Telefone"
+      label: "Celular",
+      required: "true"
     }
-  }, [_c("input", {
+  }, [_vm.edit ? _c("input", {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -2486,7 +2490,8 @@ var render = function render() {
     staticClass: "form-control",
     attrs: {
       id: "phone",
-      type: "text"
+      placeholder: "Ex: 11911119999",
+      type: "number"
     },
     domProps: {
       value: _vm.client.phone
@@ -2497,12 +2502,15 @@ var render = function render() {
         _vm.$set(_vm.client, "phone", $event.target.value);
       }
     }
-  })]), _vm._v(" "), _c("form-row", {
+  }) : _vm._e(), _vm._v(" "), !_vm.edit ? _c("div", {
+    staticClass: "pt-2"
+  }, [_vm._v(_vm._s(_vm.client.phone))]) : _vm._e()]), _vm._v(" "), _c("form-row", {
     attrs: {
       id: "postal_code",
-      label: "* CEP"
+      label: "CEP",
+      required: "true"
     }
-  }, [_c("input", {
+  }, [_vm.edit ? _c("input", {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -2512,7 +2520,8 @@ var render = function render() {
     staticClass: "form-control",
     attrs: {
       id: "postal_code",
-      type: "text"
+      placeholder: "Ex: 11111999",
+      type: "number"
     },
     domProps: {
       value: _vm.client.postal_code
@@ -2523,12 +2532,15 @@ var render = function render() {
         _vm.$set(_vm.client, "postal_code", $event.target.value);
       }
     }
-  })]), _vm._v(" "), _c("form-row", {
+  }) : _vm._e(), _vm._v(" "), !_vm.edit ? _c("div", {
+    staticClass: "pt-2"
+  }, [_vm._v(_vm._s(_vm.client.postal_code))]) : _vm._e()]), _vm._v(" "), _c("form-row", {
     attrs: {
       id: "address",
-      label: "* Endereço"
+      label: "Endereço",
+      required: "true"
     }
-  }, [_c("input", {
+  }, [_vm.edit ? _c("input", {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -2549,12 +2561,15 @@ var render = function render() {
         _vm.$set(_vm.client, "address", $event.target.value);
       }
     }
-  })]), _vm._v(" "), _c("form-row", {
+  }) : _vm._e(), _vm._v(" "), !_vm.edit ? _c("div", {
+    staticClass: "pt-2"
+  }, [_vm._v(_vm._s(_vm.client.address))]) : _vm._e()]), _vm._v(" "), _c("form-row", {
     attrs: {
       id: "province",
-      label: "* Bairro"
+      label: "Bairro",
+      required: "true"
     }
-  }, [_c("input", {
+  }, [_vm.edit ? _c("input", {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -2575,12 +2590,15 @@ var render = function render() {
         _vm.$set(_vm.client, "province", $event.target.value);
       }
     }
-  })]), _vm._v(" "), _c("form-row", {
+  }) : _vm._e(), _vm._v(" "), !_vm.edit ? _c("div", {
+    staticClass: "pt-2"
+  }, [_vm._v(_vm._s(_vm.client.province))]) : _vm._e()]), _vm._v(" "), _c("form-row", {
     attrs: {
       id: "address_number",
-      label: "* Número"
+      label: "Número",
+      required: "true"
     }
-  }, [_c("input", {
+  }, [_vm.edit ? _c("input", {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -2601,12 +2619,14 @@ var render = function render() {
         _vm.$set(_vm.client, "address_number", $event.target.value);
       }
     }
-  })]), _vm._v(" "), _c("form-row", {
+  }) : _vm._e(), _vm._v(" "), !_vm.edit ? _c("div", {
+    staticClass: "pt-2"
+  }, [_vm._v(_vm._s(_vm.client.address_number))]) : _vm._e()]), _vm._v(" "), _c("form-row", {
     attrs: {
       id: "complement",
       label: "Complemento"
     }
-  }, [_c("input", {
+  }, [_vm.edit ? _c("input", {
     directives: [{
       name: "model",
       rawName: "v-model",
@@ -2627,14 +2647,16 @@ var render = function render() {
         _vm.$set(_vm.client, "complement", $event.target.value);
       }
     }
-  })])], 1)]) : _vm._e();
+  }) : _vm._e(), _vm._v(" "), !_vm.edit ? _c("div", {
+    staticClass: "pt-2"
+  }, [_vm._v(_vm._s(_vm.client.complement))]) : _vm._e()])], 1)]) : _vm._e();
 };
 var staticRenderFns = [function () {
   var _vm = this,
     _c = _vm._self._c;
   return _c("div", {
     staticClass: "col-sm-6"
-  }, [_c("h1", [_vm._v("Minha Conta")])]);
+  }, [_c("h1", [_vm._v("Cadastro")])]);
 }];
 render._withStripped = true;
 
@@ -2695,7 +2717,7 @@ var render = function render() {
       }
     }
   }), _vm._v(" "), !_vm.loading && !_vm.client ? _c("button", {
-    staticClass: "btn btn-success btn-sm me-2",
+    staticClass: "btn btn-180 btn-success btn-sm me-2",
     attrs: {
       type: "button"
     },
@@ -2703,12 +2725,12 @@ var render = function render() {
       click: _vm.fetchClient
     }
   }, [_vm._v("Entrar / Cadastrar")]) : _vm._e(), _vm._v(" "), _vm.loading ? _c("button", {
-    staticClass: "btn btn-secondary btn-sm me-2",
+    staticClass: "btn btn-180 btn-secondary btn-sm me-2",
     attrs: {
       type: "button"
     }
-  }, [_vm._v("Processando")]) : _vm._e(), _vm._v(" "), !_vm.loading && _vm.cpf_cnpj && _vm.client ? _c("button", {
-    staticClass: "btn btn-danger btn-sm me-2",
+  }, [_vm._v("Processando...")]) : _vm._e(), _vm._v(" "), !_vm.loading && _vm.cpf_cnpj && _vm.client ? _c("button", {
+    staticClass: "btn btn-180 btn-danger btn-sm me-2",
     attrs: {
       type: "button"
     },
@@ -2739,7 +2761,7 @@ __webpack_require__.r(__webpack_exports__);
 var render = function render() {
   var _vm = this,
     _c = _vm._self._c;
-  return _vm.canClient ? _c("div", {
+  return _vm.canClient && _vm.client.asaas_id ? _c("div", {
     staticClass: "card"
   }, [_c("div", {
     staticClass: "row"
@@ -2968,12 +2990,14 @@ var render = function render() {
   return _c("div", {
     staticClass: "row p-1"
   }, [_c("label", {
-    staticClass: "col-sm-2 col-form-label",
+    staticClass: "col-sm-4 col-form-label",
     attrs: {
       "for": _vm.id
     }
-  }, [_vm._v(_vm._s(_vm.label))]), _vm._v(" "), _c("div", {
-    staticClass: "col-sm-10"
+  }, [_vm.required ? _c("span", {
+    staticClass: "text-danger"
+  }, [_vm._v("*")]) : _vm._e(), _vm._v(" " + _vm._s(_vm.label) + "\n    ")]), _vm._v(" "), _c("div", {
+    staticClass: "col-sm-8"
   }, [_vm._t("default")], 2)]);
 };
 var staticRenderFns = [];
@@ -5049,7 +5073,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.title[data-v-475f6d5e]{\n    padding-top: 0.4rem;\n}\nbutton[data-v-475f6d5e]{\n    min-width: 180px;\n    text-transform: uppercase;\n}\n", ""]);
+exports.push([module.i, "\n.title[data-v-475f6d5e]{\n    padding-top: 0.4rem;\n}\n", ""]);
 
 // exports
 

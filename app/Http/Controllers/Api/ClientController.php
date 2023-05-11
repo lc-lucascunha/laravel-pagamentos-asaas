@@ -61,7 +61,7 @@ class ClientController extends Controller
             $cpf_cnpj = unformatCpfCnpj($request->cpf_cnpj);
 
             if(!validateCpfCnpj($cpf_cnpj)){
-                return response()->json('CPF ou CNPJ inválido.', 422);
+                return response()->json('O CPF ou CNPJ informado é inválido.', 422);
             }
 
             // Verifica se o cliente existe
@@ -83,11 +83,12 @@ class ClientController extends Controller
     }
 
     /**
-     * Atualizar uma categoria específica
+     * Atualizar Cliente
      */
     public function update(Request $request, $id)
     {
         try {
+            $request = $request->all();
 
             // Verifica se o cliente existe
             $client = $this->client->find($id);
@@ -96,12 +97,12 @@ class ClientController extends Controller
             }
 
             // Valida o formulário
-            $validate = Validator::make($request->all(), [
+            $validate = Validator::make($request, [
                 'name'  => 'required|string|max:50',
                 'email' => 'required|string|email|max:50',
                 'phone' => 'required|string|min:11|max:11',
 
-                'postal_code'    => 'required|string|min:9|max:9',
+                'postal_code'    => 'required|string|min:8|max:8',
                 'address'        => 'required|string|max:100',
                 'province'       => 'required|string|max:50',
                 'address_number' => 'required|string|max:10',
@@ -112,23 +113,39 @@ class ClientController extends Controller
                 return response()->json(formatValidate($validate->errors()), 422);
             }
 
-            // Realiza o cadastro do cliente na ASAAS
+            // Cadastra o cliente na ASAAS
             if(!$client->asaas_id){
+                $response = $this->asaasService->createClient($request);
 
-                $response = $this->asaasService->createClient($request->all());
-
-                dd('response', $response);
+                if($response['status'] == 200){
+                    $client->asaas_id = $response['data']['id'];
+                    $client->save();
+                }
+                else{
+                    return response()->json($response['data'], $response['status']);
+                }
             }
 
-            dd($client);
+            // Atualiza o cliente na ASAAS
+            else{
+                $response = $this->asaasService->updateClient($request, $client->asaas_id);
 
+                if($response['status'] != 200){
+                    return response()->json($response['data'], $response['status']);
+                }
+            }
 
-            $category->update($data);
+            // Atualiza o cliente na Base de Dados
+            unset($request['id']);
+            unset($request['asaas_id']);
+            unset($request['cpf_cnpj']);
 
-            return response()->json($category);
+            $client->update($request);
+
+            return response()->json($client);
 
         } catch (\Exception $e) {
-            return response()->json('Erro ao processar requisição', 400);
+            return response()->json('Erro ao processar requisição.', 400);
         }
     }
 

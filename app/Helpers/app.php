@@ -6,7 +6,7 @@ if (!function_exists('formatValidate')) {
         $data = [];
         foreach ($errors as $error){
             foreach ($error as $value){
-                $data[] = $value;
+                $data[] = '- '.$value;
             }
         }
         return implode(PHP_EOL, $data);
@@ -14,8 +14,7 @@ if (!function_exists('formatValidate')) {
 }
 
 if (!function_exists('unformatCpfCnpj')) {
-    function unformatCpfCnpj($cpf_cnpj)
-    {
+    function unformatCpfCnpj($cpf_cnpj){
         return trim(preg_replace('/[^0-9]/', '', $cpf_cnpj));
     }
 }

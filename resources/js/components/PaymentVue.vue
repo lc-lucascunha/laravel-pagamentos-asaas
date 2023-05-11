@@ -1,5 +1,5 @@
 <template>
-    <div v-if="canClient" class="card">
+    <div v-if="canClient && client.asaas_id" class="card">
         <div class="row">
             <div class="col-sm-6">
                 <h1>{{ labels[lang].products }}</h1>
@@ -88,7 +88,9 @@ export default {
     data() {
         return {
             canClient: false,
-            client: null,
+            client: {
+                asaas_id: '',
+            },
 
             categories: [],
             products: [],
