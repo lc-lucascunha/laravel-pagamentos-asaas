@@ -1937,57 +1937,6 @@ __webpack_require__.r(__webpack_exports__);
         address_number: '',
         complement: '',
         province: ''
-      },
-      categories: [],
-      category: {
-        id: null,
-        name: '',
-        created_at: '',
-        updated_at: ''
-      },
-      formAction: '',
-      formTitle: '',
-      searchText: '',
-      lang: 'en',
-      labels: {
-        en: {
-          categories: 'Categories',
-          addCategory: 'Add Category',
-          editCategory: 'Edit Category',
-          id: 'ID',
-          name: 'Name',
-          productsCount: 'Products Count',
-          created: 'Created',
-          updated: 'Updated',
-          edit: 'Edit',
-          "delete": 'Delete',
-          create: 'Create',
-          update: 'Update',
-          cancel: 'Cancel',
-          clearSearch: 'Clear search',
-          textSearch: 'Search by Name...',
-          textConfirDelete: 'Are you sure you want to delete this category?',
-          textSearchProducts: 'Search products by this category'
-        },
-        pt: {
-          categories: 'Categorias',
-          addCategory: 'Adicionar Categoria',
-          editCategory: 'Editar Categoria',
-          id: 'ID',
-          name: 'Nome',
-          productsCount: 'Quantidade de Produtos',
-          created: 'Criado em',
-          updated: 'Atualizado em',
-          edit: 'Editar',
-          "delete": 'Excluir',
-          create: 'Cadastrar',
-          update: 'Atualizar',
-          cancel: 'Cancelar',
-          clearSearch: 'Limpar busca',
-          textSearch: 'Buscar por Nome...',
-          textConfirDelete: 'Tem certeza de que deseja excluir esta categoria?',
-          textSearchProducts: 'Buscar produtos por esta categoria'
-        }
       }
     };
   },
@@ -1995,19 +1944,6 @@ __webpack_require__.r(__webpack_exports__);
     var _this = this;
     _eventBus__WEBPACK_IMPORTED_MODULE_0__["default"].$on('set-client', function (client) {
       _this.setClient(client);
-    });
-    this.fetchCategories();
-    _eventBus__WEBPACK_IMPORTED_MODULE_0__["default"].$on('product-created', function () {
-      _this.fetchCategories();
-    });
-    _eventBus__WEBPACK_IMPORTED_MODULE_0__["default"].$on('product-updated', function () {
-      _this.fetchCategories();
-    });
-    _eventBus__WEBPACK_IMPORTED_MODULE_0__["default"].$on('product-deleted', function () {
-      _this.fetchCategories();
-    });
-    _eventBus__WEBPACK_IMPORTED_MODULE_0__["default"].$on('languagem-select', function (lang) {
-      _this.fetchLang(lang);
     });
   },
   methods: {
@@ -2019,49 +1955,12 @@ __webpack_require__.r(__webpack_exports__);
       this.client = client;
       this.edit = this.client.asaas_id ? false : true;
     },
-    emitCategories: function emitCategories(event) {
-      var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-      _eventBus__WEBPACK_IMPORTED_MODULE_0__["default"].$emit('category-' + event, data);
-    },
-    fetchLang: function fetchLang(lang) {
-      this.lang = lang;
-    },
-    fetchCategories: function fetchCategories() {
-      var _this2 = this;
-      var url = '/api/categories';
-      if (this.searchText) {
-        url += '?q=' + encodeURIComponent(this.searchText.trim());
-      }
-      axios.get(url).then(function (response) {
-        _this2.categories = response.data;
-      })["catch"](function (error) {
-        console.log(error);
-      });
-    },
-    createCategory: function createCategory() {
-      this.formAction = this.labels[this.lang].create;
-      this.formTitle = this.labels[this.lang].addCategory;
-      this.category.id = null;
-      this.category.name = '';
-      this.category.created_at = '';
-      this.category.updated_at = '';
-      $('#categoryModal').modal('show');
-    },
-    editCategory: function editCategory(category) {
-      this.formAction = this.labels[this.lang].update;
-      this.formTitle = this.labels[this.lang].editCategory;
-      this.category.id = category.id;
-      this.category.name = category.name;
-      this.category.created_at = category.created_at;
-      this.category.updated_at = category.updated_at;
-      $('#categoryModal').modal('show');
-    },
     submitClient: function submitClient() {
-      var _this3 = this;
+      var _this2 = this;
       this.loading = true;
       axios.put('/api/clients/' + this.client.id, this.client).then(function (response) {
-        var message = _this3.client.asaas_id ? 'Cadastro atualizado com sucesso!' : 'Cadastro finalizado com sucesso e pagamentos liberados!';
-        _this3.emitSetClient(response.data);
+        var message = _this2.client.asaas_id ? 'Cadastro atualizado com sucesso!' : 'Cadastro finalizado com sucesso e pagamentos liberados!';
+        _this2.emitSetClient(response.data);
         alert(message);
       })["catch"](function (error) {
         var response = error.response;
@@ -2073,19 +1972,8 @@ __webpack_require__.r(__webpack_exports__);
             alert(response.data);
         }
       })["finally"](function () {
-        _this3.loading = false;
+        _this2.loading = false;
       });
-    },
-    deleteCategory: function deleteCategory(category) {
-      var _this4 = this;
-      if (confirm(this.labels[this.lang].textConfirDelete)) {
-        axios["delete"]('/api/categories/' + category.id).then(function (response) {
-          _this4.fetchCategories();
-          _this4.emitCategories('deleted');
-        })["catch"](function (error) {
-          console.log(error);
-        });
-      }
     }
   }
 });
@@ -2397,18 +2285,18 @@ var render = function render() {
     attrs: {
       type: "submit"
     }
-  }, [_vm._v("\n                        " + _vm._s(_vm.client.asaas_id ? "Salvar Alterações" : "Finalizar Cadastro") + "\n                    ")]) : _vm._e(), _vm._v(" "), !_vm.loading && !_vm.edit ? _c("div", {
+  }, [_vm._v("\n                    " + _vm._s(_vm.client.asaas_id ? "Salvar Alterações" : "Finalizar Cadastro") + "\n                ")]) : _vm._e(), _vm._v(" "), !_vm.loading && !_vm.edit ? _c("div", {
     staticClass: "btn btn-180 btn-primary",
     on: {
       click: function click($event) {
         _vm.edit = true;
       }
     }
-  }, [_vm._v("\n                        Atualizar Cadastro\n                    ")]) : _vm._e(), _vm._v(" "), _vm.loading ? _c("div", {
+  }, [_vm._v("\n                    Atualizar Cadastro\n                ")]) : _vm._e(), _vm._v(" "), _vm.loading ? _c("div", {
     staticClass: "btn btn-180 btn-secondary"
-  }, [_vm._v("\n                        Processando...\n                    ")]) : _vm._e()]), _vm._v(" "), !_vm.client.asaas_id ? _c("div", {
+  }, [_vm._v("\n                    Processando...\n                ")]) : _vm._e()]), _vm._v(" "), !_vm.client.asaas_id ? _c("div", {
     staticClass: "col-sm-12 text-center alert alert-danger mt-2 mb-0"
-  }, [_vm._v("\n                    * Finalize o cadastro e libere todas funções de pagamento.\n                ")]) : _vm._e()]), _vm._v(" "), _c("form-row", {
+  }, [_vm._v("\n                * Finalize o cadastro e libere todas funções de pagamento.\n            ")]) : _vm._e()]), _vm._v(" "), _c("form-row", {
     attrs: {
       id: "cpf_cnpj",
       label: "CPF / CNPJ"
