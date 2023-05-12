@@ -1,7 +1,7 @@
 <template>
     <div v-if="canClient" class="card">
         <form @submit.prevent="submitClient">
-            <div class="row pb-1">
+            <div class="row pb-1 row-header">
                 <div class="col-sm-6">
                     <h1>Cadastro</h1>
                 </div>
@@ -15,9 +15,6 @@
                     <div v-if="loading" class="btn btn-180 btn-secondary">
                         Processando...
                     </div>
-                </div>
-                <div v-if="!client.asaas_id" class="col-sm-12 text-center alert alert-danger mt-2 mb-0">
-                    * Finalize o cadastro e libere todas funções de pagamento.
                 </div>
             </div>
 
@@ -55,7 +52,7 @@
                 <input v-if="edit" v-model="client.address_number" id="address_number" type="text" class="form-control">
                 <div v-if="!edit" class="pt-2">{{client.address_number}}</div>
             </form-row>
-            <form-row id="complement" label="Complemento">
+            <form-row id="complement" label="Complemento" class="mb-2">
                 <input v-if="edit" v-model="client.complement" id="complement" type="text" class="form-control">
                 <div v-if="!edit" class="pt-2">{{client.complement}}</div>
             </form-row>
@@ -141,7 +138,6 @@ export default {
     }
 };
 </script>
-
 
 <style scoped>
 

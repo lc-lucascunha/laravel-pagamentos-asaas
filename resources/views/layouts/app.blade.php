@@ -18,6 +18,9 @@
             padding: 2rem;
             margin: 0;
         }
+        .row-header{
+            border-bottom: 1px solid rgba(0, 0, 0, 0.175);
+        }
 
         table tbody tr td{
             font-size:  0.7875rem;
@@ -60,6 +63,8 @@
         .pt-0{padding-top: 0 !important;}
         .pb-0{padding-bottom: 0 !important;}
         .pb-1{padding-bottom: 1rem !important;}
+        .pl-0{padding-left: 0 !important;}
+        .pr-0{padding-right: 0 !important;}
 
         .cursor-pointer{
             cursor: pointer;

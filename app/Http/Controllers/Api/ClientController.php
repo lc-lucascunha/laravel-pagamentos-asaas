@@ -83,7 +83,7 @@ class ClientController extends Controller
     }
 
     /**
-     * Atualizar Cliente
+     * ok Atualizar Cliente
      */
     public function update(Request $request, $id)
     {
