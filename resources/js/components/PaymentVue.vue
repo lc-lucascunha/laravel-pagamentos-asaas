@@ -64,21 +64,13 @@
                                         <div class="form-group mb-2">
                                             <label for="value" >Qual produto deseja contratar?</label>
                                             <select class="form-control" id="value" v-model="payment_value">
-                                                <option value="">Selecione</option>
-                                                <option value="1200.00">R$ 1.200,00 - MÓDULO CRM</option>
-                                                <option value="2600.00">R$ 2.600,00 - MÓDULO RH</option>
-                                                <option value="3000.00">R$ 3.000,00 - MÓDULO FINANCEIRO</option>
-                                                <option value="1500.00">R$ 1.500,00 - MÓDULO MARKETING</option>
-                                                <option value="1000.00">R$ 1.000,00 - MÓDULO TREINAMENTO</option>
+                                                <option v-for="row in values" :value="row.value">{{row.name}}</option>
                                             </select>
                                         </div>
                                         <div class="form-group mb-2">
                                             <label for="type">Qual a forma de pagamento?</label>
                                             <select class="form-control" id="type" v-model="payment_type">
-                                                <option value="">Selecione</option>
-                                                <option value="PIX">PIX</option>
-                                                <option value="BOLETO">BOLETO</option>
-                                                <option value="CREDIT_CARD">CARTÃO DE CRÉDITO</option>
+                                                <option v-for="row in types" :value="row.value">{{row.name}}</option>
                                             </select>
                                         </div>
 
@@ -86,24 +78,22 @@
                                             <div class="form-group mb-2">
                                                 <label for="card">Selecione um cartão de crédito:</label>
                                                 <select class="form-control" id="card" v-model="payment_card">
-                                                    <option value="">INFORMAR UM NOVO CARTÃO</option>
-                                                    <option value="1">(8855) MASTERCARD</option>
-                                                    <option value="2">(5522) VISA</option>
-                                                    <option value="3">(4455) MASTERCARD</option>
+                                                    <option v-for="row in cards" :value="row.value">{{row.name}}</option>
                                                 </select>
                                             </div>
 
-                                            <div v-if="!payment_card">
-
+                                            <div v-if="payment_value">
                                                 <p class="text-success modal-subtitle mb-2 mt-3">Parcelas</p>
 
                                                 <div class="form-group mb-2">
                                                     <label for="installment">Selecione a quantidade de parcelas:</label>
-                                                    <select class="form-control" id="installment" v-model="credit_card.installment">
-                                                        <option v-for="installment in installments" :value="installment.number">{{installment.name}}</option>
+                                                    <select class="form-control" id="installment" v-model="payment_installment">
+                                                        <option v-for="row in installments" :value="row.value">{{row.name}}</option>
                                                     </select>
                                                 </div>
+                                            </div>
 
+                                            <div v-if="!payment_card">
                                                 <p class="text-success modal-subtitle mb-2 mt-3">Informe os dados do cartão</p>
 
                                                 <div class="form-group mb-2">
@@ -199,7 +189,11 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="submit" class="btn btn-success">Finalizar Pagamento</button>
+                                <button type="submit" class="btn btn-success">
+                                    <span v-if="payment_type == 'PIX'">Gerar QRCode para pagamento</span>
+                                    <span v-else-if="payment_type == 'BOLETO'">Emitir boleto para pagamento</span>
+                                    <span v-else>Finalizar Pagamento</span>
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -219,20 +213,31 @@ export default {
     components: {FormRow},
     data() {
         return {
+            // Cliente
+
             canClient: false,
             client: {
                 asaas_id: '',
             },
 
+            // Modal de Pagamentos
+
+            values: [],
+            types: [],
+            cards: [],
+            installments: [],
+
             payment_value: '',
             payment_type: '',
             payment_card: '',
+            payment_installment: '',
 
-            credit_card: {},
-            installments: [],
+            is_holder: '',
 
-            is_holder: 'yes',
             holder: {},
+            credit_card: {},
+
+
 
 
 
@@ -331,41 +336,50 @@ export default {
     },
     watch: {
         payment_value: _.debounce(function() {
-            // Atualiza as parcelas
+            if(!this.payment_value){
+                this.payment_installment = this.getDefaultData('payment_installment');
+            }
             this.fetchInstallments();
         }),
         payment_type: _.debounce(function() {
-            // Limpa os inputs filhos
-            this.payment_card = '';
-
-            this.credit_card = {
-                installment: '',
-                holder_name: '',
-                number: '',
-                expiry_month: '',
-                expiry_year: '',
-                ccv: ''
-            };
-
-            this.is_holder = 'yes';
+            this.payment_card        = this.getDefaultData('payment_card');
+            this.payment_installment = this.getDefaultData('payment_installment');
+            this.credit_card         = this.getDefaultData('credit_card');
+            this.is_holder           = this.getDefaultData('is_holder');
         }),
         payment_card: _.debounce(function() {
-            // Limpa os inputs filhos
-            this.credit_card = {
-                installment: '',
-                holder_name: '',
-                number: '',
-                expiry_month: '',
-                expiry_year: '',
-                ccv: ''
-            };
-
-            this.is_holder = 'yes';
+            this.credit_card  = this.getDefaultData('credit_card');
+            this.is_holder    = this.getDefaultData('is_holder');
         }),
         is_holder: _.debounce(function() {
-            // Limpa os inputs filhos
-            if(this.is_holder == 'no'){
-                this.holder = {
+            this.holder = this.getDefaultData('holder');
+        })
+    },
+    methods: {
+        setClient(client){
+            this.canClient = (client ? true : false);
+            this.client = client;
+        },
+        getDefaultData(key){
+            let data = {
+                canClient: false,
+                client: {
+                    asaas_id: '',
+                },
+
+                values: [],
+                types: [],
+                cards: [],
+                installments: [],
+
+                payment_value: '',
+                payment_type: '',
+                payment_card: '',
+                payment_installment: '',
+
+                is_holder: 'yes',
+
+                holder: {
                     cpf_cnpj: '',
                     name: '',
                     email: '',
@@ -376,14 +390,17 @@ export default {
                     address_number: '',
                     complement: '',
                     province: ''
-                };
-            }
-        })
-    },
-    methods: {
-        setClient(client){
-            this.canClient = (client ? true : false);
-            this.client = client;
+                },
+
+                credit_card: {
+                    holder_name: '',
+                    number: '',
+                    expiry_month: '',
+                    expiry_year: '',
+                    ccv: ''
+                },
+            };
+            return data[key];
         },
         modalOpen(modal){
             $('#modal-'+modal).modal('show');
@@ -391,51 +408,32 @@ export default {
         modalClose(modal){
             $('#modal-'+modal).modal('hide');
         },
+
         createPayment() {
-            this.payment_value = '';
-            this.payment_type = '';
-            this.payment_card = '';
-
-            this.installments = [];
-            this.is_holder = 'yes';
-
-            this.credit_card = {
-                installment: '',
-                holder_name: '',
-                number: '',
-                expiry_month: '',
-                expiry_year: '',
-                ccv: ''
-            };
-
-            this.holder = {
-                cpf_cnpj: '',
-                name: '',
-                email: '',
-                phone: '',
-
-                postal_code: '',
-                address: '',
-                address_number: '',
-                complement: '',
-                province: ''
-            };
-
+            this.fetchValues();
+            this.fetchTypes();
+            this.fetchCards();
+            this.installments          = this.getDefaultData('installments');
+            this.payment_value         = this.getDefaultData('payment_value');
+            this.payment_type          = this.getDefaultData('payment_type');
+            this.payment_card          = this.getDefaultData('payment_card');
+            this.payment_installment   = this.getDefaultData('payment_installment');
+            this.is_holder             = this.getDefaultData('is_holder');
+            this.holder                = this.getDefaultData('holder');
+            this.credit_card           = this.getDefaultData('credit_card');
             this.modalOpen('payment');
         },
         submitPayment() {
 
             let data = {
-                client: this.client,
-
-                payment_value: this.payment_value,
-                payment_type: this.payment_type,
-                payment_card: this.payment_card,
-
-                credit_card: this.credit_card,
-
-                is_holder: this.is_holder,
-                holder: this.holder,
+                client               : this.client,
+                payment_value        : this.payment_value,
+                payment_type         : this.payment_type,
+                payment_card         : this.payment_card,
+                payment_installment  : this.payment_installment,
+                is_holder            : this.is_holder,
+                holder               : this.holder,
+                credit_card          : this.credit_card,
             }
 
             console.log(data);
@@ -451,23 +449,50 @@ export default {
                     console.log(error);
                 });*/
         },
+
+        fetchValues(){
+            let data = [];
+            data.push({value: ''       , name: 'Selecione'});
+            data.push({value: '1200.00', name: 'R$ 1.200,00 - MÓDULO CRM'});
+            data.push({value: '2600.00', name: 'R$ 2.600,00 - MÓDULO RH'});
+            data.push({value: '3000.00', name: 'R$ 3.000,00 - MÓDULO FINANCEIRO'});
+            data.push({value: '1500.00', name: 'R$ 1.500,00 - MÓDULO MARKETING'});
+            data.push({value: '1000.00', name: 'R$ 1.000,00 - MÓDULO TREINAMENTO'});
+            this.values = data;
+        },
+        fetchTypes(){
+            let data = [];
+            data.push({value: ''           , name: 'Selecione'});
+            data.push({value: 'PIX'        , name: 'PIX'});
+            data.push({value: 'BOLETO'     , name: 'BOLETO'});
+            data.push({value: 'CREDIT_CARD', name: 'CARTÃO DE CRÉDITO'});
+            this.types = data;
+        },
+        fetchCards(){
+            let data = [];
+            data.push({value: '' , name: 'Informar um novo cartão'});
+            data.push({value: '1', name: '(8855) MASTERCARD'});
+            data.push({value: '2', name: '(5522) VISA'});
+            data.push({value: '3', name: '(4455) MASTERCARD'});
+            this.cards = data;
+        },
         fetchInstallments(){
             let data = [];
-            let value = this.payment_value;
-            if(value) {
-                data.push({
-                    number: '',
-                    name: 'À vista (R$ ' + value + ')'
-                });
+            if(this.payment_value){
+                let value = parseFloat(this.payment_value);
+                let valueFormat = value.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
 
+                data.push({value: '', name: 'À Vista ' + valueFormat});
+
+                let iFormat = '';
                 for (let i = 2; i <= 12; i++) {
-                    data.push({
-                        number: i,
-                        name: i + ' de R$ ' + (parseFloat(value)/parseFloat(i))
-                    });
+                    valueFormat = (value / parseFloat(i));
+                    valueFormat = valueFormat.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+                    iFormat = i.toLocaleString('pt-BR', {minimumIntegerDigits: 2, minimumFractionDigits: 0});
+
+                    data.push({value: i, name: iFormat + ' x ' + valueFormat});
                 }
             }
-            this.credit_card.installment = '';
             this.installments = data;
         },
 

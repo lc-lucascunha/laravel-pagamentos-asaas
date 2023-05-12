@@ -2064,17 +2064,25 @@ __webpack_require__.r(__webpack_exports__);
   },
   data: function data() {
     return {
+      // Cliente
+
       canClient: false,
       client: {
         asaas_id: ''
       },
+      // Modal de Pagamentos
+
+      values: [],
+      types: [],
+      cards: [],
+      installments: [],
       payment_value: '',
       payment_type: '',
       payment_card: '',
-      credit_card: {},
-      installments: [],
-      is_holder: 'yes',
+      payment_installment: '',
+      is_holder: '',
       holder: {},
+      credit_card: {},
       categories: [],
       products: [],
       product: {
@@ -2155,38 +2163,46 @@ __webpack_require__.r(__webpack_exports__);
   },
   watch: {
     payment_value: lodash__WEBPACK_IMPORTED_MODULE_1___default.a.debounce(function () {
-      // Atualiza as parcelas
+      if (!this.payment_value) {
+        this.payment_installment = this.getDefaultData('payment_installment');
+      }
       this.fetchInstallments();
     }),
     payment_type: lodash__WEBPACK_IMPORTED_MODULE_1___default.a.debounce(function () {
-      // Limpa os inputs filhos
-      this.payment_card = '';
-      this.credit_card = {
-        installment: '',
-        holder_name: '',
-        number: '',
-        expiry_month: '',
-        expiry_year: '',
-        ccv: ''
-      };
-      this.is_holder = 'yes';
+      this.payment_card = this.getDefaultData('payment_card');
+      this.payment_installment = this.getDefaultData('payment_installment');
+      this.credit_card = this.getDefaultData('credit_card');
+      this.is_holder = this.getDefaultData('is_holder');
     }),
     payment_card: lodash__WEBPACK_IMPORTED_MODULE_1___default.a.debounce(function () {
-      // Limpa os inputs filhos
-      this.credit_card = {
-        installment: '',
-        holder_name: '',
-        number: '',
-        expiry_month: '',
-        expiry_year: '',
-        ccv: ''
-      };
-      this.is_holder = 'yes';
+      this.credit_card = this.getDefaultData('credit_card');
+      this.is_holder = this.getDefaultData('is_holder');
     }),
     is_holder: lodash__WEBPACK_IMPORTED_MODULE_1___default.a.debounce(function () {
-      // Limpa os inputs filhos
-      if (this.is_holder == 'no') {
-        this.holder = {
+      this.holder = this.getDefaultData('holder');
+    })
+  },
+  methods: {
+    setClient: function setClient(client) {
+      this.canClient = client ? true : false;
+      this.client = client;
+    },
+    getDefaultData: function getDefaultData(key) {
+      var data = {
+        canClient: false,
+        client: {
+          asaas_id: ''
+        },
+        values: [],
+        types: [],
+        cards: [],
+        installments: [],
+        payment_value: '',
+        payment_type: '',
+        payment_card: '',
+        payment_installment: '',
+        is_holder: 'yes',
+        holder: {
           cpf_cnpj: '',
           name: '',
           email: '',
@@ -2196,14 +2212,16 @@ __webpack_require__.r(__webpack_exports__);
           address_number: '',
           complement: '',
           province: ''
-        };
-      }
-    })
-  },
-  methods: {
-    setClient: function setClient(client) {
-      this.canClient = client ? true : false;
-      this.client = client;
+        },
+        credit_card: {
+          holder_name: '',
+          number: '',
+          expiry_month: '',
+          expiry_year: '',
+          ccv: ''
+        }
+      };
+      return data[key];
     },
     modalOpen: function modalOpen(modal) {
       $('#modal-' + modal).modal('show');
@@ -2212,30 +2230,17 @@ __webpack_require__.r(__webpack_exports__);
       $('#modal-' + modal).modal('hide');
     },
     createPayment: function createPayment() {
-      this.payment_value = '';
-      this.payment_type = '';
-      this.payment_card = '';
-      this.installments = [];
-      this.is_holder = 'yes';
-      this.credit_card = {
-        installment: '',
-        holder_name: '',
-        number: '',
-        expiry_month: '',
-        expiry_year: '',
-        ccv: ''
-      };
-      this.holder = {
-        cpf_cnpj: '',
-        name: '',
-        email: '',
-        phone: '',
-        postal_code: '',
-        address: '',
-        address_number: '',
-        complement: '',
-        province: ''
-      };
+      this.fetchValues();
+      this.fetchTypes();
+      this.fetchCards();
+      this.installments = this.getDefaultData('installments');
+      this.payment_value = this.getDefaultData('payment_value');
+      this.payment_type = this.getDefaultData('payment_type');
+      this.payment_card = this.getDefaultData('payment_card');
+      this.payment_installment = this.getDefaultData('payment_installment');
+      this.is_holder = this.getDefaultData('is_holder');
+      this.holder = this.getDefaultData('holder');
+      this.credit_card = this.getDefaultData('credit_card');
       this.modalOpen('payment');
     },
     submitPayment: function submitPayment() {
@@ -2244,9 +2249,10 @@ __webpack_require__.r(__webpack_exports__);
         payment_value: this.payment_value,
         payment_type: this.payment_type,
         payment_card: this.payment_card,
-        credit_card: this.credit_card,
+        payment_installment: this.payment_installment,
         is_holder: this.is_holder,
-        holder: this.holder
+        holder: this.holder,
+        credit_card: this.credit_card
       };
       console.log(data);
 
@@ -2261,22 +2267,103 @@ __webpack_require__.r(__webpack_exports__);
               console.log(error);
           });*/
     },
+    fetchValues: function fetchValues() {
+      var data = [];
+      data.push({
+        value: '',
+        name: 'Selecione'
+      });
+      data.push({
+        value: '1200.00',
+        name: 'R$ 1.200,00 - MÓDULO CRM'
+      });
+      data.push({
+        value: '2600.00',
+        name: 'R$ 2.600,00 - MÓDULO RH'
+      });
+      data.push({
+        value: '3000.00',
+        name: 'R$ 3.000,00 - MÓDULO FINANCEIRO'
+      });
+      data.push({
+        value: '1500.00',
+        name: 'R$ 1.500,00 - MÓDULO MARKETING'
+      });
+      data.push({
+        value: '1000.00',
+        name: 'R$ 1.000,00 - MÓDULO TREINAMENTO'
+      });
+      this.values = data;
+    },
+    fetchTypes: function fetchTypes() {
+      var data = [];
+      data.push({
+        value: '',
+        name: 'Selecione'
+      });
+      data.push({
+        value: 'PIX',
+        name: 'PIX'
+      });
+      data.push({
+        value: 'BOLETO',
+        name: 'BOLETO'
+      });
+      data.push({
+        value: 'CREDIT_CARD',
+        name: 'CARTÃO DE CRÉDITO'
+      });
+      this.types = data;
+    },
+    fetchCards: function fetchCards() {
+      var data = [];
+      data.push({
+        value: '',
+        name: 'Informar um novo cartão'
+      });
+      data.push({
+        value: '1',
+        name: '(8855) MASTERCARD'
+      });
+      data.push({
+        value: '2',
+        name: '(5522) VISA'
+      });
+      data.push({
+        value: '3',
+        name: '(4455) MASTERCARD'
+      });
+      this.cards = data;
+    },
     fetchInstallments: function fetchInstallments() {
       var data = [];
-      var value = this.payment_value;
-      if (value) {
-        data.push({
-          number: '',
-          name: 'À vista (R$ ' + value + ')'
+      if (this.payment_value) {
+        var value = parseFloat(this.payment_value);
+        var valueFormat = value.toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
         });
+        data.push({
+          value: '',
+          name: 'À Vista ' + valueFormat
+        });
+        var iFormat = '';
         for (var i = 2; i <= 12; i++) {
+          valueFormat = value / parseFloat(i);
+          valueFormat = valueFormat.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+          });
+          iFormat = i.toLocaleString('pt-BR', {
+            minimumIntegerDigits: 2,
+            minimumFractionDigits: 0
+          });
           data.push({
-            number: i,
-            name: i + ' de R$ ' + parseFloat(value) / parseFloat(i)
+            value: i,
+            name: iFormat + ' x ' + valueFormat
           });
         }
       }
-      this.credit_card.installment = '';
       this.installments = data;
     },
     emitProducts: function emitProducts(event) {
@@ -2850,31 +2937,13 @@ var render = function render() {
         _vm.payment_value = $event.target.multiple ? $$selectedVal : $$selectedVal[0];
       }
     }
-  }, [_c("option", {
-    attrs: {
-      value: ""
-    }
-  }, [_vm._v("Selecione")]), _vm._v(" "), _c("option", {
-    attrs: {
-      value: "1200.00"
-    }
-  }, [_vm._v("R$ 1.200,00 - MÓDULO CRM")]), _vm._v(" "), _c("option", {
-    attrs: {
-      value: "2600.00"
-    }
-  }, [_vm._v("R$ 2.600,00 - MÓDULO RH")]), _vm._v(" "), _c("option", {
-    attrs: {
-      value: "3000.00"
-    }
-  }, [_vm._v("R$ 3.000,00 - MÓDULO FINANCEIRO")]), _vm._v(" "), _c("option", {
-    attrs: {
-      value: "1500.00"
-    }
-  }, [_vm._v("R$ 1.500,00 - MÓDULO MARKETING")]), _vm._v(" "), _c("option", {
-    attrs: {
-      value: "1000.00"
-    }
-  }, [_vm._v("R$ 1.000,00 - MÓDULO TREINAMENTO")])])]), _vm._v(" "), _c("div", {
+  }, _vm._l(_vm.values, function (row) {
+    return _c("option", {
+      domProps: {
+        value: row.value
+      }
+    }, [_vm._v(_vm._s(row.name))]);
+  }), 0)]), _vm._v(" "), _c("div", {
     staticClass: "form-group mb-2"
   }, [_c("label", {
     attrs: {
@@ -2902,23 +2971,13 @@ var render = function render() {
         _vm.payment_type = $event.target.multiple ? $$selectedVal : $$selectedVal[0];
       }
     }
-  }, [_c("option", {
-    attrs: {
-      value: ""
-    }
-  }, [_vm._v("Selecione")]), _vm._v(" "), _c("option", {
-    attrs: {
-      value: "PIX"
-    }
-  }, [_vm._v("PIX")]), _vm._v(" "), _c("option", {
-    attrs: {
-      value: "BOLETO"
-    }
-  }, [_vm._v("BOLETO")]), _vm._v(" "), _c("option", {
-    attrs: {
-      value: "CREDIT_CARD"
-    }
-  }, [_vm._v("CARTÃO DE CRÉDITO")])])]), _vm._v(" "), _vm.payment_type == "CREDIT_CARD" ? _c("div", [_c("div", {
+  }, _vm._l(_vm.types, function (row) {
+    return _c("option", {
+      domProps: {
+        value: row.value
+      }
+    }, [_vm._v(_vm._s(row.name))]);
+  }), 0)]), _vm._v(" "), _vm.payment_type == "CREDIT_CARD" ? _c("div", [_c("div", {
     staticClass: "form-group mb-2"
   }, [_c("label", {
     attrs: {
@@ -2946,23 +3005,13 @@ var render = function render() {
         _vm.payment_card = $event.target.multiple ? $$selectedVal : $$selectedVal[0];
       }
     }
-  }, [_c("option", {
-    attrs: {
-      value: ""
-    }
-  }, [_vm._v("INFORMAR UM NOVO CARTÃO")]), _vm._v(" "), _c("option", {
-    attrs: {
-      value: "1"
-    }
-  }, [_vm._v("(8855) MASTERCARD")]), _vm._v(" "), _c("option", {
-    attrs: {
-      value: "2"
-    }
-  }, [_vm._v("(5522) VISA")]), _vm._v(" "), _c("option", {
-    attrs: {
-      value: "3"
-    }
-  }, [_vm._v("(4455) MASTERCARD")])])]), _vm._v(" "), !_vm.payment_card ? _c("div", [_c("p", {
+  }, _vm._l(_vm.cards, function (row) {
+    return _c("option", {
+      domProps: {
+        value: row.value
+      }
+    }, [_vm._v(_vm._s(row.name))]);
+  }), 0)]), _vm._v(" "), _vm.payment_value ? _c("div", [_c("p", {
     staticClass: "text-success modal-subtitle mb-2 mt-3"
   }, [_vm._v("Parcelas")]), _vm._v(" "), _c("div", {
     staticClass: "form-group mb-2"
@@ -2974,8 +3023,8 @@ var render = function render() {
     directives: [{
       name: "model",
       rawName: "v-model",
-      value: _vm.credit_card.installment,
-      expression: "credit_card.installment"
+      value: _vm.payment_installment,
+      expression: "payment_installment"
     }],
     staticClass: "form-control",
     attrs: {
@@ -2989,16 +3038,16 @@ var render = function render() {
           var val = "_value" in o ? o._value : o.value;
           return val;
         });
-        _vm.$set(_vm.credit_card, "installment", $event.target.multiple ? $$selectedVal : $$selectedVal[0]);
+        _vm.payment_installment = $event.target.multiple ? $$selectedVal : $$selectedVal[0];
       }
     }
-  }, _vm._l(_vm.installments, function (installment) {
+  }, _vm._l(_vm.installments, function (row) {
     return _c("option", {
       domProps: {
-        value: installment.number
+        value: row.value
       }
-    }, [_vm._v(_vm._s(installment.name))]);
-  }), 0)]), _vm._v(" "), _c("p", {
+    }, [_vm._v(_vm._s(row.name))]);
+  }), 0)])]) : _vm._e(), _vm._v(" "), !_vm.payment_card ? _c("div", [_c("p", {
     staticClass: "text-success modal-subtitle mb-2 mt-3"
   }, [_vm._v("Informe os dados do cartão")]), _vm._v(" "), _c("div", {
     staticClass: "form-group mb-2"
@@ -3428,7 +3477,20 @@ var render = function render() {
         _vm.$set(_vm.holder, "complement", $event.target.value);
       }
     }
-  })])])]) : _vm._e()])]), _vm._v(" "), _vm._m(4)])])])])])]) : _vm._e();
+  })])])]) : _vm._e()])]), _vm._v(" "), _c("div", {
+    staticClass: "modal-footer"
+  }, [_c("button", {
+    staticClass: "btn btn-secondary",
+    attrs: {
+      type: "button",
+      "data-bs-dismiss": "modal"
+    }
+  }, [_vm._v("Cancelar")]), _vm._v(" "), _c("button", {
+    staticClass: "btn btn-success",
+    attrs: {
+      type: "submit"
+    }
+  }, [_vm.payment_type == "PIX" ? _c("span", [_vm._v("Gerar QRCode para pagamento")]) : _vm.payment_type == "BOLETO" ? _c("span", [_vm._v("Emitir boleto para pagamento")]) : _c("span", [_vm._v("Finalizar Pagamento")])])])])])])])])]) : _vm._e();
 };
 var staticRenderFns = [function () {
   var _vm = this,
@@ -3463,23 +3525,6 @@ var staticRenderFns = [function () {
       id: "modal-payment-label"
     }
   }, [_vm._v("REALIZAR PAGAMENTO")])]);
-}, function () {
-  var _vm = this,
-    _c = _vm._self._c;
-  return _c("div", {
-    staticClass: "modal-footer"
-  }, [_c("button", {
-    staticClass: "btn btn-secondary",
-    attrs: {
-      type: "button",
-      "data-bs-dismiss": "modal"
-    }
-  }, [_vm._v("Cancelar")]), _vm._v(" "), _c("button", {
-    staticClass: "btn btn-success",
-    attrs: {
-      type: "submit"
-    }
-  }, [_vm._v("Finalizar Pagamento")])]);
 }];
 render._withStripped = true;
 
