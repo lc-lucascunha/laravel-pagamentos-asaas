@@ -2066,7 +2066,7 @@ __webpack_require__.r(__webpack_exports__);
       },
       // Listagem dos pagamentos
       payments: [],
-      // Operações de pagamento
+      // Modal Pagamento
       values: [],
       types: [],
       cards: [],
@@ -2078,6 +2078,15 @@ __webpack_require__.r(__webpack_exports__);
       is_holder: '',
       holder: {},
       credit_card: {},
+      // Modal exibir pagamento
+      modal: {
+        pix: {
+          encodedImage: '',
+          payload: ''
+        },
+        boleto: '',
+        creditCard: []
+      },
       categories: [],
       products: [],
       product: {
@@ -2163,10 +2172,6 @@ __webpack_require__.r(__webpack_exports__);
   methods: {
     getDefaultData: function getDefaultData(key) {
       var data = {
-        canClient: false,
-        client: {
-          asaas_id: ''
-        },
         values: [],
         types: [],
         cards: [],
@@ -2232,7 +2237,8 @@ __webpack_require__.r(__webpack_exports__);
       };
       axios.post('/api/payments', data).then(function (response) {
         _this2.modalClose('payment');
-        console.log('SUCCESS', response);
+        _this2.showPayment(response.data.id, response.data.billing_type);
+        console.log('SUCCESS', response.data);
       })["catch"](function (error) {
         var response = error.response;
         switch (response.status) {
@@ -2244,6 +2250,30 @@ __webpack_require__.r(__webpack_exports__);
         }
       });
     },
+    // Exibe os pagamentos
+    showPayment: function showPayment(id, type) {
+      var _this3 = this;
+      axios.get('/api/payments/' + id).then(function (response) {
+        console.log('SUCCESS', response.data);
+        switch (type) {
+          case 'PIX':
+            _this3.modal.pix = response.data;
+            _this3.modalOpen('pix');
+            break;
+          case 'BOLETO':
+            _this3.modal.boleto = response.data;
+            break;
+          case 'CREDIT_CARD':
+            _this3.modal.creditCard = response.data;
+        }
+      })["catch"](function (error) {
+        var response = error.response;
+        alert(response.data);
+      });
+    },
+    showPaymentPix: function showPaymentPix(id) {},
+    showPaymentBoleto: function showPaymentBoleto(id) {},
+    showPaymentCreditCard: function showPaymentCreditCard(id) {},
     // Atualizar dados
     fetchValues: function fetchValues() {
       var data = [];
@@ -2367,22 +2397,37 @@ __webpack_require__.r(__webpack_exports__);
     modalClose: function modalClose(modal) {
       $('#modal-' + modal).modal('hide');
     },
+    // Metódos auxiliares
+    copyText: function copyText() {
+      var texto = document.getElementById("copy").innerText;
+      var btn = document.getElementById("btnCopy");
+      var item = new ClipboardItem({
+        "text/plain": new Blob([texto], {
+          type: "text/plain"
+        })
+      });
+      navigator.clipboard.write([item]);
+      btn.innerText = "Copiado com sucesso!";
+      setTimeout(function () {
+        btn.innerText = "Copiar código";
+      }, 1500);
+    },
     fetchProducts: function fetchProducts() {
-      var _this3 = this;
+      var _this4 = this;
       var url = '/api/products';
       if (this.searchText) {
         url += '?q=' + encodeURIComponent(this.searchText.trim());
       }
       axios.get(url).then(function (response) {
-        _this3.products = response.data;
+        _this4.products = response.data;
       })["catch"](function (error) {
         console.log(error);
       });
     },
     fetchCategories: function fetchCategories() {
-      var _this4 = this;
+      var _this5 = this;
       axios.get('/api/categories').then(function (response) {
-        _this4.categories = response.data;
+        _this5.categories = response.data;
       })["catch"](function (error) {
         console.log(error);
       });
@@ -2398,11 +2443,11 @@ __webpack_require__.r(__webpack_exports__);
       this.modalOpen('payment');
     },
     deleteProduct: function deleteProduct(product) {
-      var _this5 = this;
+      var _this6 = this;
       if (confirm(this.labels[this.lang].textConfirDelete)) {
         axios["delete"]('/api/products/' + product.id).then(function (response) {
-          _this5.fetchProducts();
-          _this5.emitProducts('deleted');
+          _this6.fetchProducts();
+          _this6.emitProducts('deleted');
         })["catch"](function (error) {
           console.log(error);
         });
@@ -3485,7 +3530,49 @@ var render = function render() {
     attrs: {
       type: "submit"
     }
-  }, [_vm.payment_type == "PIX" ? _c("span", [_vm._v("Gerar QRCode para pagamento")]) : _vm.payment_type == "BOLETO" ? _c("span", [_vm._v("Emitir boleto para pagamento")]) : _c("span", [_vm._v("Finalizar Pagamento")])])])])])])])])]) : _vm._e();
+  }, [_vm.payment_type == "PIX" ? _c("span", [_vm._v("Gerar QRCode para pagamento")]) : _vm.payment_type == "BOLETO" ? _c("span", [_vm._v("Emitir boleto para pagamento")]) : _c("span", [_vm._v("Finalizar Pagamento")])])])])])])]), _vm._v(" "), _c("div", {
+    staticClass: "modal fade",
+    attrs: {
+      id: "modal-pix",
+      tabindex: "-1",
+      "aria-labelledby": "modal-pix-label",
+      "aria-hidden": "true"
+    }
+  }, [_c("div", {
+    staticClass: "modal-dialog"
+  }, [_c("div", {
+    staticClass: "modal-content"
+  }, [_vm._m(4), _vm._v(" "), _c("div", {
+    staticClass: "modal-body text-center"
+  }, [_c("p", {
+    staticClass: "mb-0"
+  }, [_vm._v("Acesse seu APP de pagamentos e faça a leitura do QR Code abaixo para efetuar o pagamento de forma rápida e segura.")]), _vm._v(" "), _c("img", {
+    attrs: {
+      src: "data:image/jpeg;base64," + _vm.modal.pix.encodedImage
+    }
+  }), _vm._v(" "), _c("p", [_vm._v("Ou copie e cole o código abaixo:")]), _vm._v(" "), _c("p", {
+    staticClass: "alert alert-secondary",
+    attrs: {
+      id: "copy"
+    }
+  }, [_vm._v(_vm._s(_vm.modal.pix.payload))])]), _vm._v(" "), _c("div", {
+    staticClass: "modal-footer"
+  }, [_c("button", {
+    staticClass: "btn btn-secondary",
+    attrs: {
+      type: "button",
+      "data-bs-dismiss": "modal"
+    }
+  }, [_vm._v("Fechar")]), _vm._v(" "), _c("button", {
+    staticClass: "btn btn-success",
+    attrs: {
+      id: "btnCopy",
+      type: "button"
+    },
+    on: {
+      click: _vm.copyText
+    }
+  }, [_vm._v("Copiar código")])])])])])])]) : _vm._e();
 };
 var staticRenderFns = [function () {
   var _vm = this,
@@ -3520,6 +3607,17 @@ var staticRenderFns = [function () {
       id: "modal-payment-label"
     }
   }, [_vm._v("REALIZAR PAGAMENTO")])]);
+}, function () {
+  var _vm = this,
+    _c = _vm._self._c;
+  return _c("div", {
+    staticClass: "modal-header bg-success text-white"
+  }, [_c("h5", {
+    staticClass: "modal-title",
+    attrs: {
+      id: "modal-pix-label"
+    }
+  }, [_vm._v("PIX - FINALIZE O PAGAMENTO")])]);
 }];
 render._withStripped = true;
 

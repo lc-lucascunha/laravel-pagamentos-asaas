@@ -199,6 +199,27 @@
                     </div>
                 </div>
             </div>
+
+            <div class="modal fade" id="modal-pix" tabindex="-1" aria-labelledby="modal-pix-label" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title" id="modal-pix-label">PIX - FINALIZE O PAGAMENTO</h5>
+                        </div>
+                        <div class="modal-body text-center">
+                            <p class="mb-0">Acesse seu APP de pagamentos e faça a leitura do QR Code abaixo para efetuar o pagamento de forma rápida e segura.</p>
+                            <img :src="'data:image/jpeg;base64,'+modal.pix.encodedImage">
+                            <p>Ou copie e cole o código abaixo:</p>
+                            <p id="copy" class="alert alert-secondary">{{modal.pix.payload}}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                            <button id="btnCopy" @click="copyText" type="button" class="btn btn-success">Copiar código</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </template>
@@ -220,7 +241,7 @@ export default {
             // Listagem dos pagamentos
             payments: [],
 
-            // Operações de pagamento
+            // Modal Pagamento
             values: [],
             types: [],
             cards: [],
@@ -236,6 +257,15 @@ export default {
             holder: {},
             credit_card: {},
 
+            // Modal exibir pagamento
+            modal: {
+                pix: {
+                    encodedImage: '',
+                    payload: ''
+                },
+                boleto: '',
+                creditCard: []
+            },
 
 
 
@@ -342,11 +372,6 @@ export default {
     methods: {
         getDefaultData(key){
             let data = {
-                canClient: false,
-                client: {
-                    asaas_id: '',
-                },
-
                 values: [],
                 types: [],
                 cards: [],
@@ -438,16 +463,26 @@ export default {
 
         // Exibe os pagamentos
         showPayment(id, type){
-            switch (type){
-                case 'PIX':
-                    this.showPaymentPix(id);
-                    break;
-                case 'BOLETO':
-                    this.showPaymentBoleto(id);
-                    break;
-                case 'CREDIT_CARD':
-                    this.showPaymentCreditCard(id);
-            }
+
+            axios.get('/api/payments/'+id)
+                .then(response => {
+                    console.log('SUCCESS', response.data);
+                    switch (type){
+                        case 'PIX':
+                            this.modal.pix = response.data;
+                            this.modalOpen('pix');
+                            break;
+                        case 'BOLETO':
+                            this.modal.boleto = response.data;
+                            break;
+                        case 'CREDIT_CARD':
+                            this.modal.creditCard = response.data;
+                    }
+                })
+                .catch(error => {
+                    let response = error.response;
+                    alert(response.data);
+                });
         },
         showPaymentPix(id){
 
@@ -525,7 +560,17 @@ export default {
             $('#modal-'+modal).modal('hide');
         },
 
-
+        // Metódos auxiliares
+        copyText() {
+            let texto = document.getElementById("copy").innerText;
+            let btn   = document.getElementById("btnCopy");
+            let item  = new ClipboardItem({
+                "text/plain": new Blob([texto], { type: "text/plain" })
+            });
+            navigator.clipboard.write([item]);
+            btn.innerText = "Copiado com sucesso!";
+            setTimeout(function() {btn.innerText = "Copiar código";}, 1500);
+        },
 
 
 

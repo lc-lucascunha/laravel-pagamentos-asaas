@@ -23,6 +23,7 @@ Route::group(['namespace' => 'Api'], function () {
     */
 
     Route::group(['prefix' => 'payments'], function () {
+        Route::get('{id}', 'PaymentController@show');
         Route::post('', 'PaymentController@store');
     });
 

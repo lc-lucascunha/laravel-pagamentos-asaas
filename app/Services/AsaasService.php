@@ -43,7 +43,7 @@ class AsaasService
 
             $request = new Request(
                 'POST',
-                env('ASAAS_DOMAIN').'/api/v3/customers/',
+                env('ASAAS_DOMAIN').'/api/v3/customers',
                 $headers,
                 $body
             );
@@ -173,6 +173,34 @@ class AsaasService
                 env('ASAAS_DOMAIN').'/api/v3/payments',
                 $headers,
                 $body
+            );
+
+            $response = $client->sendAsync($request)->wait();
+
+            return asaasFormatResponse($response);
+        }
+        catch (\Exception $e) {
+            return asaasFormatResponse($e->getMessage());
+        }
+    }
+
+    /**
+     * Recupera o QRCode do PIX
+     */
+    public function getPixQrCode($id)
+    {
+        try {
+            $client = new Client();
+
+            $headers = [
+                'Content-Type' => 'application/json',
+                'access_token' => env('ASAAS_KEY'),
+            ];
+
+            $request = new Request(
+                'GET',
+                env('ASAAS_DOMAIN').'/api/v3/payments/'.$id.'/pixQrCode',
+                $headers
             );
 
             $response = $client->sendAsync($request)->wait();

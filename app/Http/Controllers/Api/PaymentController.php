@@ -37,6 +37,37 @@ class PaymentController extends Controller
     }
 
     /**
+     * Exibir pagamento
+     */
+    public function show($id)
+    {
+        try {
+            // Recupera o pagamento
+            $payment = $this->payment->find($id);
+            if (!$payment) {
+                return response()->json('Pagamento não localizado.', 404);
+            }
+
+            // Recupero o retorno
+            switch ($payment->billing_type){
+                case 'PIX':
+                    $response = $this->asaasService->getPixQrCode($payment->asaas_id);
+                    break;
+                case 'BOLETO':
+                    $response = [];
+                    break;
+                case 'CREDIT_CARD':
+                    $response = [];
+            }
+
+            return response()->json($response['data'], $response['status']);
+
+        } catch (\Exception $e) {
+            return response()->json('Erro ao processar requisição.', 400);
+        }
+    }
+
+    /**
      * Realizar pagamento
      */
     public function store(Request $request)
