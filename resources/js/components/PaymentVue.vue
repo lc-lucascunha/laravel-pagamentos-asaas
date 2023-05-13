@@ -206,22 +206,21 @@
 <script>
 import bus from '../eventBus';
 import _ from 'lodash';
-import FormRow from "./forms/RowHorizontalVue.vue";
 
 export default {
     name: 'PaymentVue',
-    components: {FormRow},
     data() {
         return {
             // Cliente
-
             canClient: false,
             client: {
                 asaas_id: '',
             },
 
-            // Modal de Pagamentos
+            // Listagem dos pagamentos
+            payments: [],
 
+            // Operações de pagamento
             values: [],
             types: [],
             cards: [],
@@ -309,30 +308,15 @@ export default {
             this.setClient(client);
         });
 
+
+
+
+
+
+
         this.fetchProducts();
         this.fetchCategories();
 
-        bus.$on('category-created', () => {
-            this.fetchCategories();
-        });
-
-        bus.$on('category-updated', () => {
-            this.fetchCategories();
-            this.fetchProducts();
-        });
-
-        bus.$on('category-deleted', () => {
-            this.fetchCategories();
-            this.fetchProducts();
-        });
-
-        bus.$on('category-search', (category) => {
-            this.searchText = category;
-        });
-
-        bus.$on('languagem-select', (lang) => {
-            this.fetchLang(lang);
-        });
     },
     watch: {
         payment_value: _.debounce(function() {
@@ -356,10 +340,6 @@ export default {
         })
     },
     methods: {
-        setClient(client){
-            this.canClient = (client ? true : false);
-            this.client = client;
-        },
         getDefaultData(key){
             let data = {
                 canClient: false,
@@ -402,13 +382,14 @@ export default {
             };
             return data[key];
         },
-        modalOpen(modal){
-            $('#modal-'+modal).modal('show');
-        },
-        modalClose(modal){
-            $('#modal-'+modal).modal('hide');
+
+        // Atualização do cliente
+        setClient(client){
+            this.canClient = (client ? true : false);
+            this.client = client;
         },
 
+        // Operações de pagamento
         createPayment() {
             this.fetchValues();
             this.fetchTypes();
@@ -424,40 +405,69 @@ export default {
             this.modalOpen('payment');
         },
         submitPayment() {
-
             let data = {
-                client               : this.client,
-                payment_value        : this.payment_value,
-                payment_type         : this.payment_type,
-                payment_card         : this.payment_card,
-                payment_installment  : this.payment_installment,
-                is_holder            : this.is_holder,
-                holder               : this.holder,
-                credit_card          : this.credit_card,
+                client       : this.client,
+                value_name   : this.getValueDescription(this.payment_value),
+                value        : this.payment_value,
+                type         : this.payment_type,
+                card         : this.payment_card,
+                installment  : this.payment_installment,
+                is_holder    : this.is_holder,
+                holder       : this.holder,
+                credit_card  : this.credit_card,
             }
 
-            console.log(data);
-
-            /*axios.post('/api/products', data)
+            axios.post('/api/payments', data)
                 .then(response => {
                     this.modalClose('payment');
-                    this.searchText = '';
-                    this.fetchProducts();
-                    this.emitProducts('created');
+                    this.showPayment(response.data.id, response.data.billing_type);
+                    console.log('SUCCESS', response.data);
                 })
                 .catch(error => {
-                    console.log(error);
-                });*/
+                    let response = error.response;
+                    switch (response.status){
+                        case 422:
+                            alert('VERIFIQUE OS ERROS NO FORMULÁRIO:\n\n'+response.data);
+                            break;
+
+                        default:
+                            alert(response.data);
+                    }
+                });
         },
 
+        // Exibe os pagamentos
+        showPayment(id, type){
+            switch (type){
+                case 'PIX':
+                    this.showPaymentPix(id);
+                    break;
+                case 'BOLETO':
+                    this.showPaymentBoleto(id);
+                    break;
+                case 'CREDIT_CARD':
+                    this.showPaymentCreditCard(id);
+            }
+        },
+        showPaymentPix(id){
+
+        },
+        showPaymentBoleto(id){
+
+        },
+        showPaymentCreditCard(id){
+
+        },
+
+        // Atualizar dados
         fetchValues(){
             let data = [];
-            data.push({value: ''       , name: 'Selecione'});
-            data.push({value: '1200.00', name: 'R$ 1.200,00 - MÓDULO CRM'});
-            data.push({value: '2600.00', name: 'R$ 2.600,00 - MÓDULO RH'});
-            data.push({value: '3000.00', name: 'R$ 3.000,00 - MÓDULO FINANCEIRO'});
-            data.push({value: '1500.00', name: 'R$ 1.500,00 - MÓDULO MARKETING'});
-            data.push({value: '1000.00', name: 'R$ 1.000,00 - MÓDULO TREINAMENTO'});
+            data.push({value: '', name: 'Selecione', description: ''});
+            data.push({value: '1200.00', name: 'R$ 1.200,00 - MÓDULO CRM'        , description: 'MÓDULO CRM'});
+            data.push({value: '2600.00', name: 'R$ 2.600,00 - MÓDULO RH'         , description: 'MÓDULO RH'});
+            data.push({value: '3000.00', name: 'R$ 3.000,00 - MÓDULO FINANCEIRO' , description: 'MÓDULO FINANCEIRO'});
+            data.push({value: '1500.00', name: 'R$ 1.500,00 - MÓDULO MARKETING'  , description: 'MÓDULO MARKETING'});
+            data.push({value: '1000.00', name: 'R$ 1.000,00 - MÓDULO TREINAMENTO', description: 'MÓDULO TREINAMENTO'});
             this.values = data;
         },
         fetchTypes(){
@@ -496,19 +506,32 @@ export default {
             this.installments = data;
         },
 
-
-
-
-
-
-
-
-        emitProducts(event){
-            bus.$emit('product-'+event);
+        // Obter dados
+        getValueDescription(value){
+            let description = '';
+            this.values.forEach(function(data) {
+                if(data.value == value){
+                    description = data.description;
+                }
+            });
+            return description;
         },
-        fetchLang(lang) {
-            this.lang = lang;
+
+        // Modal
+        modalOpen(modal){
+            $('#modal-'+modal).modal('show');
         },
+        modalClose(modal){
+            $('#modal-'+modal).modal('hide');
+        },
+
+
+
+
+
+
+
+
         fetchProducts() {
             let url = '/api/products';
 

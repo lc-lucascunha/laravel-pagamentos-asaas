@@ -1,12 +1,24 @@
 <?php
 
 if (!function_exists('formatValidate')) {
-    function formatValidate($errors){
-        $errors = $errors->toArray();
+    function formatValidate($errors, $validateLaravel = true){
         $data = [];
-        foreach ($errors as $error){
-            foreach ($error as $value){
-                $data[] = '- '.$value;
+        if($validateLaravel) {
+            $errors = $errors->toArray();
+            foreach ($errors as $error) {
+                foreach ($error as $value) {
+                    $data[] = '- ' . $value;
+                }
+            }
+        }
+        else{
+            if(is_string($errors)){
+                $data[] = $errors;
+            }
+            else {
+                foreach ($errors as $value) {
+                    $data[] = '- ' . $value;
+                }
             }
         }
         return implode(PHP_EOL, $data);

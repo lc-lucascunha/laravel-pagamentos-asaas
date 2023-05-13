@@ -12,11 +12,20 @@ Route::group(['namespace' => 'Api'], function () {
     */
 
     Route::group(['prefix' => 'clients'], function () {
-        Route::get(''       , 'ClientController@index');
-        Route::post(''      , 'ClientController@store'); // ok
-        Route::put('{id}'   , 'ClientController@update'); // fazendo
-        Route::delete('{id}', 'ClientController@destroy');
+        Route::post(''      , 'ClientController@store');
+        Route::put('{id}'   , 'ClientController@update');
     });
+
+    /*
+    |--------------------------------------------------------------------------
+    | PAGAMENTOS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::group(['prefix' => 'payments'], function () {
+        Route::post('', 'PaymentController@store');
+    });
+
 
     /*
     |--------------------------------------------------------------------------

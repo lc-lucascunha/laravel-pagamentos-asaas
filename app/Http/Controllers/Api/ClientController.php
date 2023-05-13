@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
 use App\Models\Client;
 use App\Services\AsaasService;
 use Illuminate\Http\Request;
@@ -11,10 +10,6 @@ use Illuminate\Support\Facades\Validator;
 
 class ClientController extends Controller
 {
-    /**
-     * @var Category
-     */
-    private $category;
     /**
      * @var Client
      */
@@ -26,37 +21,21 @@ class ClientController extends Controller
 
     public function __construct(
         AsaasService $asaasService,
-        Client $client,
-        Category $category
+        Client $client
     )
     {
         $this->asaasService = $asaasService;
         $this->client = $client;
-        $this->category  = $category;
     }
 
     /**
-     * Listar categorias
-     */
-    public function index(Request $request)
-    {
-        try {
-
-            $categories = $this->category->search($request->q)->withCount('products')->get();
-
-            return response()->json($categories);
-
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Erro ao processar requisição'], 500);
-        }
-    }
-
-    /**
-     * OK Cadastrar Cliente
+     * Cadastrar Cliente
      */
     public function store(Request $request)
     {
         try {
+            $statusHttp = 200;
+
             // Valida o CPF ou CNPJ
             $cpf_cnpj = unformatCpfCnpj($request->cpf_cnpj);
 
@@ -69,13 +48,15 @@ class ClientController extends Controller
 
             // Cadastra o cliente
             if(!$client) {
+                $statusHttp = 201;
+
                 $this->client->create(['cpf_cnpj' => $cpf_cnpj]);
 
                 // Recupero novamente o cliente com todos atributos
                 $client = $this->client->findCpfCnpj($cpf_cnpj)->first();
             }
 
-            return response()->json($client);
+            return response()->json($client, $statusHttp);
 
         } catch (\Exception $e) {
             return response()->json('Erro ao processar requisição.', 400);
@@ -83,7 +64,7 @@ class ClientController extends Controller
     }
 
     /**
-     * ok Atualizar Cliente
+     * Atualizar Cliente
      */
     public function update(Request $request, $id)
     {
@@ -149,29 +130,4 @@ class ClientController extends Controller
         }
     }
 
-    /**
-     * Remover uma categoria específica
-     */
-    public function destroy($id)
-    {
-        try {
-
-            $category = $this->category->find($id);
-
-            if (!$category) {
-                return response()->json(['message' => 'Categoria não encontrada'], 404);
-            }
-
-            // Exclui todos os produtos relacionados com a categoria
-            $category->products()->delete();
-
-            // Exclui a categoria
-            $category->delete();
-
-            return response()->json(['message' => 'Categoria removida com sucesso']);
-
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Erro ao processar requisição'], 422);
-        }
-    }
 }

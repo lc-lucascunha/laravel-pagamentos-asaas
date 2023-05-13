@@ -97,4 +97,90 @@ class AsaasService
             return asaasFormatResponse($e->getMessage());
         }
     }
+
+    /**
+     * Pagamento por PIX
+     */
+    public function paymentPix($data)
+    {
+        try {
+            $client = new Client();
+
+            $headers = [
+                'Content-Type' => 'application/json',
+                'access_token' => env('ASAAS_KEY'),
+            ];
+
+            $body = json_encode([
+                "externalReference" => $data['id'],
+                "customer"          => $data['customer'],
+                "billingType"       => $data['billing_type'],
+                "dueDate"           => $data['due_date'],
+                "value"             => $data['value'],
+                "description"       => $data['description'],
+            ]);
+
+            $request = new Request(
+                'POST',
+                env('ASAAS_DOMAIN').'/api/v3/payments',
+                $headers,
+                $body
+            );
+
+            $response = $client->sendAsync($request)->wait();
+
+            return asaasFormatResponse($response);
+        }
+        catch (\Exception $e) {
+            return asaasFormatResponse($e->getMessage());
+        }
+    }
+
+    /**
+     * Pagamento por BOLETO
+     */
+    public function paymentBoleto($data)
+    {
+        try {
+            $client = new Client();
+
+            $headers = [
+                'Content-Type' => 'application/json',
+                'access_token' => env('ASAAS_KEY'),
+            ];
+
+            $body = json_encode([
+                "externalReference" => $data['id'],
+                "customer"          => $data['customer'],
+                "billingType"       => $data['billing_type'],
+                "dueDate"           => $data['due_date'],
+                "value"             => $data['value'],
+                "description"       => $data['description'],
+                "discount" => [
+                    "value" => 10,
+                    "dueDateLimitDays" => 0
+                ],
+                "fine" => [
+                    "value" => 1
+                ],
+                "interest" => [
+                    "value" => 2
+                ],
+            ]);
+
+            $request = new Request(
+                'POST',
+                env('ASAAS_DOMAIN').'/api/v3/payments',
+                $headers,
+                $body
+            );
+
+            $response = $client->sendAsync($request)->wait();
+
+            return asaasFormatResponse($response);
+        }
+        catch (\Exception $e) {
+            return asaasFormatResponse($e->getMessage());
+        }
+    }
 }

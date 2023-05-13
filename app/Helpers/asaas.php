@@ -1,4 +1,17 @@
 <?php
+if (!function_exists('asaasGetDataCreatePayment')) {
+    function asaasGetDataCreatePayment($client, $request)
+    {
+        return [
+            'client_id'    => $client->id,
+            'customer'     => $client->asaas_id,
+            'billing_type' => $request['type'],
+            'due_date'     => date('Y-m-d'),
+            'value'        => floatval($request['value']),
+            'description'  => $request['value_name'],
+        ];
+    }
+}
 
 if (!function_exists('asaasFormatResponse')) {
     function asaasFormatResponse($response){
