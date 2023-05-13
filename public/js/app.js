@@ -2238,7 +2238,6 @@ __webpack_require__.r(__webpack_exports__);
       axios.post('/api/payments', data).then(function (response) {
         _this2.modalClose('payment');
         _this2.showPayment(response.data.id, response.data.billing_type);
-        console.log('SUCCESS', response.data);
       })["catch"](function (error) {
         var response = error.response;
         switch (response.status) {
@@ -2262,6 +2261,7 @@ __webpack_require__.r(__webpack_exports__);
             break;
           case 'BOLETO':
             _this3.modal.boleto = response.data;
+            _this3.modalOpen('boleto');
             break;
           case 'CREDIT_CARD':
             _this3.modal.creditCard = response.data;
@@ -3572,7 +3572,42 @@ var render = function render() {
     on: {
       click: _vm.copyText
     }
-  }, [_vm._v("Copiar código")])])])])])])]) : _vm._e();
+  }, [_vm._v("Copiar código")])])])])]), _vm._v(" "), _c("div", {
+    staticClass: "modal fade",
+    attrs: {
+      id: "modal-boleto",
+      tabindex: "-1",
+      "aria-labelledby": "modal-boleto-label",
+      "aria-hidden": "true"
+    }
+  }, [_c("div", {
+    staticClass: "modal-dialog modal-lg"
+  }, [_c("div", {
+    staticClass: "modal-content"
+  }, [_vm._m(5), _vm._v(" "), _c("div", {
+    staticClass: "modal-body text-center p-0"
+  }, [_c("iframe", {
+    attrs: {
+      src: _vm.modal.boleto,
+      width: "100%",
+      height: "450px"
+    }
+  })]), _vm._v(" "), _c("div", {
+    staticClass: "modal-footer"
+  }, [_c("button", {
+    staticClass: "btn btn-secondary",
+    attrs: {
+      type: "button",
+      "data-bs-dismiss": "modal"
+    }
+  }, [_vm._v("Fechar")]), _vm._v(" "), _c("a", {
+    staticClass: "btn btn-success",
+    attrs: {
+      href: _vm.modal.boleto,
+      title: _vm.modal.boleto,
+      target: "_blank"
+    }
+  }, [_vm._v("Acessar link do boleto")])])])])])])]) : _vm._e();
 };
 var staticRenderFns = [function () {
   var _vm = this,
@@ -3618,6 +3653,20 @@ var staticRenderFns = [function () {
       id: "modal-pix-label"
     }
   }, [_vm._v("PIX - FINALIZE O PAGAMENTO")])]);
+}, function () {
+  var _vm = this,
+    _c = _vm._self._c;
+  return _c("div", {
+    staticClass: "modal-header bg-success text-white",
+    staticStyle: {
+      "border-bottom": "0"
+    }
+  }, [_c("h5", {
+    staticClass: "modal-title",
+    attrs: {
+      id: "modal-boleto-label"
+    }
+  }, [_vm._v("BOLETO - FINALIZE O PAGAMENTO")])]);
 }];
 render._withStripped = true;
 

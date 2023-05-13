@@ -54,7 +54,10 @@ class PaymentController extends Controller
                     $response = $this->asaasService->getPixQrCode($payment->asaas_id);
                     break;
                 case 'BOLETO':
-                    $response = [];
+                    $response = [
+                        'status' => 200,
+                        'data'   => $payment->bank_slip_url,
+                    ];
                     break;
                 case 'CREDIT_CARD':
                     $response = [];

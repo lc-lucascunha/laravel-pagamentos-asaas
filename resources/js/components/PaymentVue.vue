@@ -220,6 +220,23 @@
                 </div>
             </div>
 
+            <div class="modal fade" id="modal-boleto" tabindex="-1" aria-labelledby="modal-boleto-label" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-success text-white" style="border-bottom: 0;">
+                            <h5 class="modal-title" id="modal-boleto-label">BOLETO - FINALIZE O PAGAMENTO</h5>
+                        </div>
+                        <div class="modal-body text-center p-0">
+                            <iframe :src="modal.boleto" width="100%" height="450px"></iframe>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                            <a :href="modal.boleto" :title="modal.boleto" target="_blank" class="btn btn-success">Acessar link do boleto</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </template>
@@ -446,7 +463,6 @@ export default {
                 .then(response => {
                     this.modalClose('payment');
                     this.showPayment(response.data.id, response.data.billing_type);
-                    console.log('SUCCESS', response.data);
                 })
                 .catch(error => {
                     let response = error.response;
@@ -474,6 +490,7 @@ export default {
                             break;
                         case 'BOLETO':
                             this.modal.boleto = response.data;
+                            this.modalOpen('boleto');
                             break;
                         case 'CREDIT_CARD':
                             this.modal.creditCard = response.data;
