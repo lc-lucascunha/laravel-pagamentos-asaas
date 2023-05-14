@@ -24,27 +24,34 @@
                 </div>
             </div>
 
-            <table class="table">
+            <table class="table table-hover">
                 <thead>
                     <tr class="table-header">
-                        <th>{{ labels[lang].id }}</th>
-                        <th>{{ labels[lang].name }}</th>
-                        <th>{{ labels[lang].category }}</th>
-                        <th class="text-center">{{ labels[lang].created }}</th>
-                        <th class="text-center">{{ labels[lang].updated }}</th>
+                        <th class="text-center">ID</th>
+                        <th class="text-center">Status</th>
+                        <th>Produto</th>
+                        <th>Valor</th>
+                        <th class="text-center">Tipo</th>
+                        <th class="text-center">Parcelas</th>
+                        <th class="text-center">Realizado em</th>
+                        <th class="text-center">Atualizado em</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="product in products" :key="product.id">
-                        <td>{{ product.id }}</td>
-                        <td>{{ product.name }}</td>
-                        <td>{{ product.category.name }}</td>
-                        <td class="text-center">{{ product.created_at }}</td>
-                        <td class="text-center">{{ product.updated_at }}</td>
+                    <tr v-for="payment in payments" :key="payment.id">
+                        <td class="text-center">{{ payment.id }}</td>
+                        <td :class="'text-center bg-status-'+payment.status">
+                            {{ formatStatus(payment.status) }}
+                        </td>
+                        <td>{{ payment.description }}</td>
+                        <td>{{ formatValue(payment.value) }}</td>
+                        <td class="text-center">{{ formatType(payment.billing_type) }}</td>
+                        <td class="text-center">{{ formatInstallment(payment.value, payment.billing_type, payment.installment, payment.installment_token) }}</td>
+                        <td class="text-center">{{ payment.created_at }}</td>
+                        <td class="text-center">{{ payment.updated_at }}</td>
                         <td class="text-end">
-                            <button type="button" class="btn btn-primary btn-sm me-2" @click="editProduct(product)">{{ labels[lang].edit }}</button>
-                            <button type="button" class="btn btn-danger btn-sm" @click="deleteProduct(product)">{{ labels[lang].delete }}</button>
+                            <button type="button" class="btn btn-primary btn-sm me-2" @click="showPayment(payment.id, payment.billing_type)">Visualizar</button>
                         </td>
                     </tr>
                 </tbody>
@@ -283,88 +290,13 @@ export default {
                 },
                 boleto: '',
                 creditCard: []
-            },
-
-
-
-
-
-
-            categories: [],
-            products: [],
-            product: {
-                id: null,
-                name: '',
-                category_id: null,
-                created_at: '',
-                updated_at: '',
-            },
-            formAction: '',
-            formTitle: '',
-            searchText: '',
-            lang: 'en',
-            labels: {
-                en: {
-                    products: 'Products',
-                    addProduct: 'Add Product',
-                    editProduct: 'Edit Product',
-
-                    id: 'ID',
-                    name: 'Name',
-                    category: 'Category',
-                    created: 'Created',
-                    updated: 'Updated',
-
-                    edit: 'Edit',
-                    delete: 'Delete',
-                    create: 'Create',
-                    update: 'Update',
-                    cancel: 'Cancel',
-
-                    clearSearch: 'Clear search',
-
-                    textSearch: 'Search by Name or Category...',
-                    textConfirDelete: 'Are you sure you want to delete this product?',
-                },
-                pt: {
-                    products: 'Produtos',
-                    addProduct: 'Adicionar Produto',
-                    editProduct: 'Editar Produto',
-
-                    id: 'ID',
-                    name: 'Nome',
-                    category: 'Categoria',
-                    created: 'Criado em',
-                    updated: 'Atualizado em',
-
-                    edit: 'Editar',
-                    delete: 'Excluir',
-                    create: 'Cadastrar',
-                    update: 'Atualizar',
-                    cancel: 'Cancelar',
-
-                    clearSearch: 'Limpar busca',
-
-                    textSearch: 'Buscar por Nome ou Categoria...',
-                    textConfirDelete: 'Tem certeza de que deseja excluir este produto?',
-                },
-            },
+            }
         }
     },
     created() {
         bus.$on('set-client', (client) => {
             this.setClient(client);
         });
-
-
-
-
-
-
-
-        this.fetchProducts();
-        this.fetchCategories();
-
     },
     watch: {
         payment_value: _.debounce(function() {
@@ -430,6 +362,10 @@ export default {
         setClient(client){
             this.canClient = (client ? true : false);
             this.client = client;
+
+            if(this.canClient && this.client.asaas_id){
+                this.fetchPayments();
+            }
         },
 
         // Operações de pagamento
@@ -462,9 +398,9 @@ export default {
 
             axios.post('/api/payments', data)
                 .then(response => {
-                    console.log(response.data);
                     this.modalClose('payment');
                     this.showPayment(response.data.id, response.data.billing_type);
+                    this.fetchPayments();
                 })
                 .catch(error => {
                     let response = error.response;
@@ -501,6 +437,12 @@ export default {
         },
 
         // Atualizar dados
+        fetchPayments(){
+            axios.get('/api/clients/'+this.client.id+'/payments')
+                .then(response => {
+                    this.payments = response.data;
+                });
+        },
         fetchValues(){
             let data = [];
             data.push({value: '', name: 'Selecione', description: ''});
@@ -531,14 +473,14 @@ export default {
             let data = [];
             if(this.payment_value){
                 let value = parseFloat(this.payment_value);
-                let valueFormat = value.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+                let valueFormat = this.formatValue(value);
 
                 data.push({value: '', name: 'À Vista ' + valueFormat});
 
                 let iFormat = '';
                 for (let i = 2; i <= 12; i++) {
                     valueFormat = (value / parseFloat(i));
-                    valueFormat = valueFormat.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+                    valueFormat = this.formatValue(valueFormat);
                     iFormat = i.toLocaleString('pt-BR', {minimumIntegerDigits: 2, minimumFractionDigits: 0});
 
                     data.push({value: i, name: iFormat + ' x ' + valueFormat});
@@ -566,6 +508,31 @@ export default {
             $('#modal-'+modal).modal('hide');
         },
 
+        // Formatações
+        formatStatus(status, title = false){
+            switch (status){
+                case 'PENDING'  : return !title ? 'PENDENTE'   : 'Aguardando pagamento';
+                case 'CONFIRMED': return !title ? 'CONFIRMADO' : 'Pagamento confirmado';
+                default: return status;
+            }
+        },
+        formatType(type){
+            return type === 'CREDIT_CARD' ? 'CARTÃO' : type;
+        },
+        formatValue(value){
+            value = parseFloat(value);
+            return value.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+        },
+        formatInstallment(value, type, installment, installment_token){
+            if(type !== 'CREDIT_CARD' || !installment_token){
+                return '---';
+            }
+            if(!installment){
+                return 'À Vista';
+            }
+            return installment+' de '+this.formatValue(value/installment);
+        },
+
         // Metódos auxiliares
         copyText() {
             let texto = document.getElementById("copy").innerText;
@@ -576,59 +543,7 @@ export default {
             navigator.clipboard.write([item]);
             btn.innerText = "Copiado com sucesso";
             setTimeout(function() {btn.innerText = "Copiar código";}, 1500);
-        },
-
-
-
-
-
-
-        fetchProducts() {
-            let url = '/api/products';
-
-            if (this.searchText) {
-                url += '?q=' + encodeURIComponent(this.searchText.trim());
-            }
-
-            axios.get(url)
-                .then(response => {
-                    this.products = response.data;
-                })
-                .catch(error => {
-                    console.log(error);
-                });
-        },
-        fetchCategories() {
-            axios.get('/api/categories')
-                .then(response => {
-                    this.categories = response.data;
-                })
-                .catch(error => {
-                    console.log(error);
-                });
-        },
-        editProduct(product) {
-            this.formAction = this.labels[this.lang].update;
-            this.formTitle = this.labels[this.lang].editProduct;
-            this.product.id = product.id;
-            this.product.name = product.name;
-            this.product.category_id = product.category_id;
-            this.product.created_at = product.created_at;
-            this.product.updated_at = product.updated_at;
-            this.modalOpen('payment');
-        },
-        deleteProduct(product) {
-            if (confirm(this.labels[this.lang].textConfirDelete)) {
-                axios.delete('/api/products/' + product.id)
-                    .then(response => {
-                        this.fetchProducts();
-                        this.emitProducts('deleted');
-                    })
-                    .catch(error => {
-                        console.log(error);
-                    });
-            }
-        },
+        }
     }
 };
 </script>
@@ -651,5 +566,11 @@ export default {
     }
     .modal-payment-right{
         padding-left: 1rem;
+    }
+    .bg-status-PENDING{
+        background: #ffcc80;
+    }
+    .bg-status-CONFIRMED{
+        background: #a5d6a7;
     }
 </style>

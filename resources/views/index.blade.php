@@ -7,10 +7,10 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-sm-5">
+        <div class="col-sm-4">
             <client-vue/>
         </div>
-        <div class="col-sm-7">
+        <div class="col-sm-8">
             <payment-vue/>
         </div>
     </div>

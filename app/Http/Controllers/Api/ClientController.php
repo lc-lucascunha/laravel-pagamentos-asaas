@@ -131,7 +131,7 @@ class ClientController extends Controller
     }
 
     /**
-     * Obter os Cartões de Crédito desse cliente
+     * Obter os Cartões de Crédito de um Cliente
      */
     public function cards($id)
     {
@@ -142,8 +142,30 @@ class ClientController extends Controller
                 return response()->json('Cliente não encontrado.', 404);
             }
 
-            // Retorna os cartões desse cliente
+            // Recupera os cartões desse cliente
             $cards = $client->cards()->orderBy('created_at', 'desc')->get();
+
+            return response()->json($cards);
+
+        } catch (\Exception $e) {
+            return response()->json('Erro ao processar requisição.', 400);
+        }
+    }
+
+    /**
+     * Obter os Pagamentos de um Cliente
+     */
+    public function payments($id)
+    {
+        try {
+            // Verifica se o cliente existe
+            $client = $this->client->find($id);
+            if (!$client) {
+                return response()->json('Cliente não encontrado.', 404);
+            }
+
+            // Recupera os pagamentos desse cliente
+            $cards = $client->payments()->orderBy('created_at', 'desc')->get();
 
             return response()->json($cards);
 

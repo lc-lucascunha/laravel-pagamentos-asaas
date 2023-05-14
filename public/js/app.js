@@ -2087,57 +2087,6 @@ __webpack_require__.r(__webpack_exports__);
         },
         boleto: '',
         creditCard: []
-      },
-      categories: [],
-      products: [],
-      product: {
-        id: null,
-        name: '',
-        category_id: null,
-        created_at: '',
-        updated_at: ''
-      },
-      formAction: '',
-      formTitle: '',
-      searchText: '',
-      lang: 'en',
-      labels: {
-        en: {
-          products: 'Products',
-          addProduct: 'Add Product',
-          editProduct: 'Edit Product',
-          id: 'ID',
-          name: 'Name',
-          category: 'Category',
-          created: 'Created',
-          updated: 'Updated',
-          edit: 'Edit',
-          "delete": 'Delete',
-          create: 'Create',
-          update: 'Update',
-          cancel: 'Cancel',
-          clearSearch: 'Clear search',
-          textSearch: 'Search by Name or Category...',
-          textConfirDelete: 'Are you sure you want to delete this product?'
-        },
-        pt: {
-          products: 'Produtos',
-          addProduct: 'Adicionar Produto',
-          editProduct: 'Editar Produto',
-          id: 'ID',
-          name: 'Nome',
-          category: 'Categoria',
-          created: 'Criado em',
-          updated: 'Atualizado em',
-          edit: 'Editar',
-          "delete": 'Excluir',
-          create: 'Cadastrar',
-          update: 'Atualizar',
-          cancel: 'Cancelar',
-          clearSearch: 'Limpar busca',
-          textSearch: 'Buscar por Nome ou Categoria...',
-          textConfirDelete: 'Tem certeza de que deseja excluir este produto?'
-        }
       }
     };
   },
@@ -2146,8 +2095,6 @@ __webpack_require__.r(__webpack_exports__);
     _eventBus__WEBPACK_IMPORTED_MODULE_0__["default"].$on('set-client', function (client) {
       _this.setClient(client);
     });
-    this.fetchProducts();
-    this.fetchCategories();
   },
   watch: {
     payment_value: lodash__WEBPACK_IMPORTED_MODULE_1___default.a.debounce(function () {
@@ -2207,6 +2154,9 @@ __webpack_require__.r(__webpack_exports__);
     setClient: function setClient(client) {
       this.canClient = client ? true : false;
       this.client = client;
+      if (this.canClient && this.client.asaas_id) {
+        this.fetchPayments();
+      }
     },
     // Operações de pagamento
     createPayment: function createPayment() {
@@ -2237,9 +2187,9 @@ __webpack_require__.r(__webpack_exports__);
         credit_card: this.credit_card
       };
       axios.post('/api/payments', data).then(function (response) {
-        console.log(response.data);
         _this2.modalClose('payment');
         _this2.showPayment(response.data.id, response.data.billing_type);
+        _this2.fetchPayments();
       })["catch"](function (error) {
         var response = error.response;
         switch (response.status) {
@@ -2272,6 +2222,12 @@ __webpack_require__.r(__webpack_exports__);
       });
     },
     // Atualizar dados
+    fetchPayments: function fetchPayments() {
+      var _this4 = this;
+      axios.get('/api/clients/' + this.client.id + '/payments').then(function (response) {
+        _this4.payments = response.data;
+      });
+    },
     fetchValues: function fetchValues() {
       var data = [];
       data.push({
@@ -2327,24 +2283,21 @@ __webpack_require__.r(__webpack_exports__);
       this.types = data;
     },
     fetchCards: function fetchCards() {
-      var _this4 = this;
+      var _this5 = this;
       axios.get('/api/clients/' + this.client.id + '/cards').then(function (response) {
         var data = response.data;
         data.unshift({
           id: '',
           name: 'Informar um novo cartão'
         });
-        _this4.cards = data;
+        _this5.cards = data;
       });
     },
     fetchInstallments: function fetchInstallments() {
       var data = [];
       if (this.payment_value) {
         var value = parseFloat(this.payment_value);
-        var valueFormat = value.toLocaleString('pt-BR', {
-          style: 'currency',
-          currency: 'BRL'
-        });
+        var valueFormat = this.formatValue(value);
         data.push({
           value: '',
           name: 'À Vista ' + valueFormat
@@ -2352,10 +2305,7 @@ __webpack_require__.r(__webpack_exports__);
         var iFormat = '';
         for (var i = 2; i <= 12; i++) {
           valueFormat = value / parseFloat(i);
-          valueFormat = valueFormat.toLocaleString('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-          });
+          valueFormat = this.formatValue(valueFormat);
           iFormat = i.toLocaleString('pt-BR', {
             minimumIntegerDigits: 2,
             minimumFractionDigits: 0
@@ -2385,6 +2335,37 @@ __webpack_require__.r(__webpack_exports__);
     modalClose: function modalClose(modal) {
       $('#modal-' + modal).modal('hide');
     },
+    // Formatações
+    formatStatus: function formatStatus(status) {
+      var title = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      switch (status) {
+        case 'PENDING':
+          return !title ? 'PENDENTE' : 'Aguardando pagamento';
+        case 'CONFIRMED':
+          return !title ? 'CONFIRMADO' : 'Pagamento confirmado';
+        default:
+          return status;
+      }
+    },
+    formatType: function formatType(type) {
+      return type === 'CREDIT_CARD' ? 'CARTÃO' : type;
+    },
+    formatValue: function formatValue(value) {
+      value = parseFloat(value);
+      return value.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      });
+    },
+    formatInstallment: function formatInstallment(value, type, installment, installment_token) {
+      if (type !== 'CREDIT_CARD' || !installment_token) {
+        return '---';
+      }
+      if (!installment) {
+        return 'À Vista';
+      }
+      return installment + ' de ' + this.formatValue(value / installment);
+    },
     // Metódos auxiliares
     copyText: function copyText() {
       var texto = document.getElementById("copy").innerText;
@@ -2399,47 +2380,6 @@ __webpack_require__.r(__webpack_exports__);
       setTimeout(function () {
         btn.innerText = "Copiar código";
       }, 1500);
-    },
-    fetchProducts: function fetchProducts() {
-      var _this5 = this;
-      var url = '/api/products';
-      if (this.searchText) {
-        url += '?q=' + encodeURIComponent(this.searchText.trim());
-      }
-      axios.get(url).then(function (response) {
-        _this5.products = response.data;
-      })["catch"](function (error) {
-        console.log(error);
-      });
-    },
-    fetchCategories: function fetchCategories() {
-      var _this6 = this;
-      axios.get('/api/categories').then(function (response) {
-        _this6.categories = response.data;
-      })["catch"](function (error) {
-        console.log(error);
-      });
-    },
-    editProduct: function editProduct(product) {
-      this.formAction = this.labels[this.lang].update;
-      this.formTitle = this.labels[this.lang].editProduct;
-      this.product.id = product.id;
-      this.product.name = product.name;
-      this.product.category_id = product.category_id;
-      this.product.created_at = product.created_at;
-      this.product.updated_at = product.updated_at;
-      this.modalOpen('payment');
-    },
-    deleteProduct: function deleteProduct(product) {
-      var _this7 = this;
-      if (confirm(this.labels[this.lang].textConfirDelete)) {
-        axios["delete"]('/api/products/' + product.id).then(function (response) {
-          _this7.fetchProducts();
-          _this7.emitProducts('deleted');
-        })["catch"](function (error) {
-          console.log(error);
-        });
-      }
     }
   }
 });
@@ -2875,21 +2815,23 @@ var render = function render() {
       click: _vm.createPayment
     }
   }, [_vm._v("Realizar Pagamento")])])]), _vm._v(" "), _c("table", {
-    staticClass: "table"
-  }, [_c("thead", [_c("tr", {
-    staticClass: "table-header"
-  }, [_c("th", [_vm._v(_vm._s(_vm.labels[_vm.lang].id))]), _vm._v(" "), _c("th", [_vm._v(_vm._s(_vm.labels[_vm.lang].name))]), _vm._v(" "), _c("th", [_vm._v(_vm._s(_vm.labels[_vm.lang].category))]), _vm._v(" "), _c("th", {
-    staticClass: "text-center"
-  }, [_vm._v(_vm._s(_vm.labels[_vm.lang].created))]), _vm._v(" "), _c("th", {
-    staticClass: "text-center"
-  }, [_vm._v(_vm._s(_vm.labels[_vm.lang].updated))]), _vm._v(" "), _c("th")])]), _vm._v(" "), _c("tbody", _vm._l(_vm.products, function (product) {
+    staticClass: "table table-hover"
+  }, [_vm._m(3), _vm._v(" "), _c("tbody", _vm._l(_vm.payments, function (payment) {
     return _c("tr", {
-      key: product.id
-    }, [_c("td", [_vm._v(_vm._s(product.id))]), _vm._v(" "), _c("td", [_vm._v(_vm._s(product.name))]), _vm._v(" "), _c("td", [_vm._v(_vm._s(product.category.name))]), _vm._v(" "), _c("td", {
+      key: payment.id
+    }, [_c("td", {
       staticClass: "text-center"
-    }, [_vm._v(_vm._s(product.created_at))]), _vm._v(" "), _c("td", {
+    }, [_vm._v(_vm._s(payment.id))]), _vm._v(" "), _c("td", {
+      "class": "text-center bg-status-" + payment.status
+    }, [_vm._v("\n                        " + _vm._s(_vm.formatStatus(payment.status)) + "\n                    ")]), _vm._v(" "), _c("td", [_vm._v(_vm._s(payment.description))]), _vm._v(" "), _c("td", [_vm._v(_vm._s(_vm.formatValue(payment.value)))]), _vm._v(" "), _c("td", {
       staticClass: "text-center"
-    }, [_vm._v(_vm._s(product.updated_at))]), _vm._v(" "), _c("td", {
+    }, [_vm._v(_vm._s(_vm.formatType(payment.billing_type)))]), _vm._v(" "), _c("td", {
+      staticClass: "text-center"
+    }, [_vm._v(_vm._s(_vm.formatInstallment(payment.value, payment.billing_type, payment.installment, payment.installment_token)))]), _vm._v(" "), _c("td", {
+      staticClass: "text-center"
+    }, [_vm._v(_vm._s(payment.created_at))]), _vm._v(" "), _c("td", {
+      staticClass: "text-center"
+    }, [_vm._v(_vm._s(payment.updated_at))]), _vm._v(" "), _c("td", {
       staticClass: "text-end"
     }, [_c("button", {
       staticClass: "btn btn-primary btn-sm me-2",
@@ -2898,20 +2840,10 @@ var render = function render() {
       },
       on: {
         click: function click($event) {
-          return _vm.editProduct(product);
+          return _vm.showPayment(payment.id, payment.billing_type);
         }
       }
-    }, [_vm._v(_vm._s(_vm.labels[_vm.lang].edit))]), _vm._v(" "), _c("button", {
-      staticClass: "btn btn-danger btn-sm",
-      attrs: {
-        type: "button"
-      },
-      on: {
-        click: function click($event) {
-          return _vm.deleteProduct(product);
-        }
-      }
-    }, [_vm._v(_vm._s(_vm.labels[_vm.lang]["delete"]))])])]);
+    }, [_vm._v("Visualizar")])])]);
   }), 0)]), _vm._v(" "), _c("div", {
     staticClass: "modal fade",
     attrs: {
@@ -2931,7 +2863,7 @@ var render = function render() {
         return _vm.submitPayment.apply(null, arguments);
       }
     }
-  }, [_vm._m(3), _vm._v(" "), _c("div", {
+  }, [_vm._m(4), _vm._v(" "), _c("div", {
     staticClass: "modal-body"
   }, [_c("div", {
     staticClass: "row p-0"
@@ -3529,7 +3461,7 @@ var render = function render() {
     staticClass: "modal-dialog"
   }, [_c("div", {
     staticClass: "modal-content"
-  }, [_vm._m(4), _vm._v(" "), _c("div", {
+  }, [_vm._m(5), _vm._v(" "), _c("div", {
     staticClass: "modal-body text-center"
   }, [_c("p", {
     staticClass: "mb-0"
@@ -3571,7 +3503,7 @@ var render = function render() {
     staticClass: "modal-dialog modal-lg"
   }, [_c("div", {
     staticClass: "modal-content"
-  }, [_vm._m(5), _vm._v(" "), _c("div", {
+  }, [_vm._m(6), _vm._v(" "), _c("div", {
     staticClass: "modal-body text-center p-0"
   }, [_c("iframe", {
     attrs: {
@@ -3618,6 +3550,24 @@ var staticRenderFns = [function () {
   return _c("div", {
     staticClass: "col-sm-6"
   }, [_c("h1", [_vm._v("Pagamentos")])]);
+}, function () {
+  var _vm = this,
+    _c = _vm._self._c;
+  return _c("thead", [_c("tr", {
+    staticClass: "table-header"
+  }, [_c("th", {
+    staticClass: "text-center"
+  }, [_vm._v("ID")]), _vm._v(" "), _c("th", {
+    staticClass: "text-center"
+  }, [_vm._v("Status")]), _vm._v(" "), _c("th", [_vm._v("Produto")]), _vm._v(" "), _c("th", [_vm._v("Valor")]), _vm._v(" "), _c("th", {
+    staticClass: "text-center"
+  }, [_vm._v("Tipo")]), _vm._v(" "), _c("th", {
+    staticClass: "text-center"
+  }, [_vm._v("Parcelas")]), _vm._v(" "), _c("th", {
+    staticClass: "text-center"
+  }, [_vm._v("Realizado em")]), _vm._v(" "), _c("th", {
+    staticClass: "text-center"
+  }, [_vm._v("Atualizado em")]), _vm._v(" "), _c("th")])]);
 }, function () {
   var _vm = this,
     _c = _vm._self._c;
@@ -5779,7 +5729,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.table-header[data-v-7fc6764b]{\n    background: #E9ECEF;\n}\n.modal-title[data-v-7fc6764b]{\n    font-weight: 500;\n    font-size: 16pt;\n}\n.modal-subtitle[data-v-7fc6764b]{\n    font-weight: bold;\n    text-transform: uppercase;\n}\n.modal-payment-left[data-v-7fc6764b]{\n    padding-right: 1rem;\n    border-right: 1px dotted rgba(0, 0, 0, 0.175);\n}\n.modal-payment-right[data-v-7fc6764b]{\n    padding-left: 1rem;\n}\n", ""]);
+exports.push([module.i, "\n.table-header[data-v-7fc6764b]{\n    background: #E9ECEF;\n}\n.modal-title[data-v-7fc6764b]{\n    font-weight: 500;\n    font-size: 16pt;\n}\n.modal-subtitle[data-v-7fc6764b]{\n    font-weight: bold;\n    text-transform: uppercase;\n}\n.modal-payment-left[data-v-7fc6764b]{\n    padding-right: 1rem;\n    border-right: 1px dotted rgba(0, 0, 0, 0.175);\n}\n.modal-payment-right[data-v-7fc6764b]{\n    padding-left: 1rem;\n}\n.bg-status-PENDING[data-v-7fc6764b]{\n    background: #ffcc80;\n}\n.bg-status-CONFIRMED[data-v-7fc6764b]{\n    background: #a5d6a7;\n}\n", ""]);
 
 // exports
 

@@ -25,4 +25,20 @@ class Payment extends Model
         return $this->belongsTo(Client::class);
     }
 
+    public function getCreatedAtAttribute($value)
+    {
+        $value = strtotime($value);
+        $date = date("d/m/Y", $value);
+        $time = date("H:i:s", $value);
+        return "{$date} {$time}";
+    }
+
+    public function getUpdatedAtAttribute($value)
+    {
+        $value = strtotime($value);
+        $date = date("d/m/Y", $value);
+        $time = date("H:i:s", $value);
+        return "{$date} {$time}";
+    }
+
 }
