@@ -79,7 +79,7 @@
                                             <div class="form-group mb-2">
                                                 <label for="card">Selecione um cartão de crédito:</label>
                                                 <select class="form-control" id="card" v-model="payment_card">
-                                                    <option v-for="row in cards" :value="row.value">{{row.name}}</option>
+                                                    <option v-for="row in cards" :value="row.id">{{row.name}}</option>
                                                 </select>
                                             </div>
 
@@ -252,6 +252,7 @@ export default {
             // Cliente
             canClient: false,
             client: {
+                id: '',
                 asaas_id: '',
             },
 
@@ -519,12 +520,12 @@ export default {
             this.types = data;
         },
         fetchCards(){
-            let data = [];
-            data.push({value: '' , name: 'Informar um novo cartão'});
-            data.push({value: '1', name: '(8855) MASTERCARD'});
-            data.push({value: '2', name: '(5522) VISA'});
-            data.push({value: '3', name: '(4455) MASTERCARD'});
-            this.cards = data;
+            axios.get('/api/clients/'+this.client.id+'/cards')
+                .then(response => {
+                    let data = response.data;
+                    data.unshift({id: '', name: 'Informar um novo cartão'});
+                    this.cards = data;
+                });
         },
         fetchInstallments(){
             let data = [];

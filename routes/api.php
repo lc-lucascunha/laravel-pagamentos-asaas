@@ -12,8 +12,9 @@ Route::group(['namespace' => 'Api'], function () {
     */
 
     Route::group(['prefix' => 'clients'], function () {
-        Route::post(''      , 'ClientController@store');
-        Route::put('{id}'   , 'ClientController@update');
+        Route::post(''         , 'ClientController@store');
+        Route::put('{id}'      , 'ClientController@update');
+        Route::get('{id}/cards', 'ClientController@cards');
     });
 
     /*

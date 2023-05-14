@@ -2062,6 +2062,7 @@ __webpack_require__.r(__webpack_exports__);
       // Cliente
       canClient: false,
       client: {
+        id: '',
         asaas_id: ''
       },
       // Listagem dos pagamentos
@@ -2326,24 +2327,15 @@ __webpack_require__.r(__webpack_exports__);
       this.types = data;
     },
     fetchCards: function fetchCards() {
-      var data = [];
-      data.push({
-        value: '',
-        name: 'Informar um novo cartão'
+      var _this4 = this;
+      axios.get('/api/clients/' + this.client.id + '/cards').then(function (response) {
+        var data = response.data;
+        data.unshift({
+          id: '',
+          name: 'Informar um novo cartão'
+        });
+        _this4.cards = data;
       });
-      data.push({
-        value: '1',
-        name: '(8855) MASTERCARD'
-      });
-      data.push({
-        value: '2',
-        name: '(5522) VISA'
-      });
-      data.push({
-        value: '3',
-        name: '(4455) MASTERCARD'
-      });
-      this.cards = data;
     },
     fetchInstallments: function fetchInstallments() {
       var data = [];
@@ -2409,21 +2401,21 @@ __webpack_require__.r(__webpack_exports__);
       }, 1500);
     },
     fetchProducts: function fetchProducts() {
-      var _this4 = this;
+      var _this5 = this;
       var url = '/api/products';
       if (this.searchText) {
         url += '?q=' + encodeURIComponent(this.searchText.trim());
       }
       axios.get(url).then(function (response) {
-        _this4.products = response.data;
+        _this5.products = response.data;
       })["catch"](function (error) {
         console.log(error);
       });
     },
     fetchCategories: function fetchCategories() {
-      var _this5 = this;
+      var _this6 = this;
       axios.get('/api/categories').then(function (response) {
-        _this5.categories = response.data;
+        _this6.categories = response.data;
       })["catch"](function (error) {
         console.log(error);
       });
@@ -2439,11 +2431,11 @@ __webpack_require__.r(__webpack_exports__);
       this.modalOpen('payment');
     },
     deleteProduct: function deleteProduct(product) {
-      var _this6 = this;
+      var _this7 = this;
       if (confirm(this.labels[this.lang].textConfirDelete)) {
         axios["delete"]('/api/products/' + product.id).then(function (response) {
-          _this6.fetchProducts();
-          _this6.emitProducts('deleted');
+          _this7.fetchProducts();
+          _this7.emitProducts('deleted');
         })["catch"](function (error) {
           console.log(error);
         });
@@ -3044,7 +3036,7 @@ var render = function render() {
   }, _vm._l(_vm.cards, function (row) {
     return _c("option", {
       domProps: {
-        value: row.value
+        value: row.id
       }
     }, [_vm._v(_vm._s(row.name))]);
   }), 0)]), _vm._v(" "), _vm.payment_value ? _c("div", [_c("p", {
@@ -3201,7 +3193,7 @@ var render = function render() {
     attrs: {
       "for": "ccv"
     }
-  }, [_vm._v("Código (CCV)")]), _vm._v(" "), _c("input", {
+  }, [_vm._v("Código (CVV)")]), _vm._v(" "), _c("input", {
     directives: [{
       name: "model",
       rawName: "v-model",
