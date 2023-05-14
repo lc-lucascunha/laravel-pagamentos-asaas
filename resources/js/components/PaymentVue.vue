@@ -27,7 +27,6 @@
             <table class="table table-hover">
                 <thead>
                     <tr class="table-header">
-                        <th class="text-center">ID</th>
                         <th class="text-center">Status</th>
                         <th>Produto</th>
                         <th>Valor</th>
@@ -40,7 +39,6 @@
                 </thead>
                 <tbody>
                     <tr v-for="payment in payments" :key="payment.id">
-                        <td class="text-center">{{ payment.id }}</td>
                         <td :class="'text-center bg-status-'+payment.status">
                             {{ formatStatus(payment.status) }}
                         </td>
@@ -244,6 +242,45 @@
                     </div>
                 </div>
             </div>
+
+            <div class="modal fade" id="modal-credit_card" tabindex="-1" aria-labelledby="modal-credit_card-label" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-success text-white" style="border-bottom: 0;">
+                            <h5 class="modal-title" id="modal-credit_card-label">CARTÃO DE CRÉDITO - EXTRATO</h5>
+                        </div>
+                        <div class="modal-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr class="table-header">
+                                        <th class="text-center">Status</th>
+                                        <th>Descrição</th>
+                                        <th class="text-center">Valor</th>
+                                        <th class="text-center">Vencimento</th>
+                                        <th class="text-center">Cartão Utilizado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="payment in modal.credit_card" :key="payment.id">
+                                        <td :class="'text-center bg-status-'+payment.status">
+                                            {{ formatStatus(payment.status) }}
+                                        </td>
+                                        <td>{{ payment.description }}</td>
+                                        <td class="text-center">{{ formatValue(payment.value) }}</td>
+                                        <td class="text-center">{{ formatDueDate(payment.dueDate) }}</td>
+                                        <td class="text-center">
+                                            {{ '('+payment.creditCard.creditCardNumber+') '+payment.creditCard.creditCardBrand }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -289,7 +326,7 @@ export default {
                     payload: ''
                 },
                 boleto: '',
-                creditCard: []
+                credit_card: []
             }
         }
     },
@@ -427,7 +464,8 @@ export default {
                             this.modalOpen('boleto');
                             break;
                         case 'CREDIT_CARD':
-                            this.modal.creditCard = response.data;
+                            this.modal.credit_card = response.data;
+                            this.modalOpen('credit_card');
                     }
                 })
                 .catch(error => {
@@ -523,8 +561,12 @@ export default {
             value = parseFloat(value);
             return value.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
         },
+        formatDueDate(dueDate){
+            dueDate = dueDate.split('-');
+            return dueDate[2] + '/' + dueDate[1] + '/' + dueDate[0];
+        },
         formatInstallment(value, type, installment, installment_token){
-            if(type !== 'CREDIT_CARD' || !installment_token){
+            if(type !== 'CREDIT_CARD'){
                 return '---';
             }
             if(!installment){

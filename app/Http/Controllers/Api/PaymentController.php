@@ -64,7 +64,18 @@ class PaymentController extends Controller
                     $response = ['status' => 200, 'data' => $payment->bank_slip_url];
                     break;
                 case 'CREDIT_CARD':
-                    $response = ['status' => 200, 'data' => ''];
+                    if($payment->installment_token){
+                        $response = $this->asaasService->getPaymentInstallment($payment->installment_token);
+                        if($response['status'] == 200){
+                            $response['data'] = $response['data']['data'];
+                        }
+                    }
+                    else{
+                        $response = $this->asaasService->getPayment($payment->asaas_id);
+                        if($response['status'] == 200){
+                            $response['data'] = [$response['data']];
+                        }
+                    }
             }
 
             return response()->json($response['data'], $response['status']);

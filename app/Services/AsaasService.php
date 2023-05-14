@@ -125,4 +125,26 @@ class AsaasService
             '/api/v3/payments/'.$id.'/pixQrCode'
         );
     }
+
+    /**
+     * Recupera um pagamento
+     */
+    public function getPayment($id)
+    {
+        return asaasCurlSend(
+            'GET',
+            '/api/v3/payments/'.$id
+        );
+    }
+
+    /**
+     * Recupera um pagamento parcelado
+     */
+    public function getPaymentInstallment($installment)
+    {
+        return asaasCurlSend(
+            'GET',
+            '/api/v3/payments?limit=12&installment='.$installment
+        );
+    }
 }

@@ -2086,7 +2086,7 @@ __webpack_require__.r(__webpack_exports__);
           payload: ''
         },
         boleto: '',
-        creditCard: []
+        credit_card: []
       }
     };
   },
@@ -2214,7 +2214,8 @@ __webpack_require__.r(__webpack_exports__);
             _this3.modalOpen('boleto');
             break;
           case 'CREDIT_CARD':
-            _this3.modal.creditCard = response.data;
+            _this3.modal.credit_card = response.data;
+            _this3.modalOpen('credit_card');
         }
       })["catch"](function (error) {
         var response = error.response;
@@ -2357,8 +2358,12 @@ __webpack_require__.r(__webpack_exports__);
         currency: 'BRL'
       });
     },
+    formatDueDate: function formatDueDate(dueDate) {
+      dueDate = dueDate.split('-');
+      return dueDate[2] + '/' + dueDate[1] + '/' + dueDate[0];
+    },
     formatInstallment: function formatInstallment(value, type, installment, installment_token) {
-      if (type !== 'CREDIT_CARD' || !installment_token) {
+      if (type !== 'CREDIT_CARD') {
         return '---';
       }
       if (!installment) {
@@ -2820,8 +2825,6 @@ var render = function render() {
     return _c("tr", {
       key: payment.id
     }, [_c("td", {
-      staticClass: "text-center"
-    }, [_vm._v(_vm._s(payment.id))]), _vm._v(" "), _c("td", {
       "class": "text-center bg-status-" + payment.status
     }, [_vm._v("\n                        " + _vm._s(_vm.formatStatus(payment.status)) + "\n                    ")]), _vm._v(" "), _c("td", [_vm._v(_vm._s(payment.description))]), _vm._v(" "), _c("td", [_vm._v(_vm._s(_vm.formatValue(payment.value)))]), _vm._v(" "), _c("td", {
       staticClass: "text-center"
@@ -3526,7 +3529,35 @@ var render = function render() {
       title: _vm.modal.boleto,
       target: "_blank"
     }
-  }, [_vm._v("Acessar link do boleto")])])])])])])]) : _vm._e();
+  }, [_vm._v("Acessar link do boleto")])])])])]), _vm._v(" "), _c("div", {
+    staticClass: "modal fade",
+    attrs: {
+      id: "modal-credit_card",
+      tabindex: "-1",
+      "aria-labelledby": "modal-credit_card-label",
+      "aria-hidden": "true"
+    }
+  }, [_c("div", {
+    staticClass: "modal-dialog modal-lg"
+  }, [_c("div", {
+    staticClass: "modal-content"
+  }, [_vm._m(7), _vm._v(" "), _c("div", {
+    staticClass: "modal-body"
+  }, [_c("table", {
+    staticClass: "table table-striped"
+  }, [_vm._m(8), _vm._v(" "), _c("tbody", _vm._l(_vm.modal.credit_card, function (payment) {
+    return _c("tr", {
+      key: payment.id
+    }, [_c("td", {
+      "class": "text-center bg-status-" + payment.status
+    }, [_vm._v("\n                                        " + _vm._s(_vm.formatStatus(payment.status)) + "\n                                    ")]), _vm._v(" "), _c("td", [_vm._v(_vm._s(payment.description))]), _vm._v(" "), _c("td", {
+      staticClass: "text-center"
+    }, [_vm._v(_vm._s(_vm.formatValue(payment.value)))]), _vm._v(" "), _c("td", {
+      staticClass: "text-center"
+    }, [_vm._v(_vm._s(_vm.formatDueDate(payment.dueDate)))]), _vm._v(" "), _c("td", {
+      staticClass: "text-center"
+    }, [_vm._v("\n                                        " + _vm._s("(" + payment.creditCard.creditCardNumber + ") " + payment.creditCard.creditCardBrand) + "\n                                    ")])]);
+  }), 0)])]), _vm._v(" "), _vm._m(9)])])])])]) : _vm._e();
 };
 var staticRenderFns = [function () {
   var _vm = this,
@@ -3556,8 +3587,6 @@ var staticRenderFns = [function () {
   return _c("thead", [_c("tr", {
     staticClass: "table-header"
   }, [_c("th", {
-    staticClass: "text-center"
-  }, [_vm._v("ID")]), _vm._v(" "), _c("th", {
     staticClass: "text-center"
   }, [_vm._v("Status")]), _vm._v(" "), _c("th", [_vm._v("Produto")]), _vm._v(" "), _c("th", [_vm._v("Valor")]), _vm._v(" "), _c("th", {
     staticClass: "text-center"
@@ -3604,6 +3633,46 @@ var staticRenderFns = [function () {
       id: "modal-boleto-label"
     }
   }, [_vm._v("BOLETO - FINALIZE O PAGAMENTO")])]);
+}, function () {
+  var _vm = this,
+    _c = _vm._self._c;
+  return _c("div", {
+    staticClass: "modal-header bg-success text-white",
+    staticStyle: {
+      "border-bottom": "0"
+    }
+  }, [_c("h5", {
+    staticClass: "modal-title",
+    attrs: {
+      id: "modal-credit_card-label"
+    }
+  }, [_vm._v("CARTÃO DE CRÉDITO - EXTRATO")])]);
+}, function () {
+  var _vm = this,
+    _c = _vm._self._c;
+  return _c("thead", [_c("tr", {
+    staticClass: "table-header"
+  }, [_c("th", {
+    staticClass: "text-center"
+  }, [_vm._v("Status")]), _vm._v(" "), _c("th", [_vm._v("Descrição")]), _vm._v(" "), _c("th", {
+    staticClass: "text-center"
+  }, [_vm._v("Valor")]), _vm._v(" "), _c("th", {
+    staticClass: "text-center"
+  }, [_vm._v("Vencimento")]), _vm._v(" "), _c("th", {
+    staticClass: "text-center"
+  }, [_vm._v("Cartão Utilizado")])])]);
+}, function () {
+  var _vm = this,
+    _c = _vm._self._c;
+  return _c("div", {
+    staticClass: "modal-footer"
+  }, [_c("button", {
+    staticClass: "btn btn-secondary",
+    attrs: {
+      type: "button",
+      "data-bs-dismiss": "modal"
+    }
+  }, [_vm._v("Fechar")])]);
 }];
 render._withStripped = true;
 
