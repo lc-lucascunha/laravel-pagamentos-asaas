@@ -37,7 +37,7 @@ class ClientController extends Controller
             $statusHttp = 200;
 
             // Valida o CPF ou CNPJ
-            $cpf_cnpj = unformatCpfCnpj($request->cpf_cnpj);
+            $cpf_cnpj = formatOnlyNumber($request->cpf_cnpj);
 
             if(!validateCpfCnpj($cpf_cnpj)){
                 return response()->json('O CPF ou CNPJ informado é inválido.', 422);

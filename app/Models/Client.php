@@ -30,4 +30,9 @@ class Client extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function cards()
+    {
+        return $this->hasMany(Card::class);
+    }
 }

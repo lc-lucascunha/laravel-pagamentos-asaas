@@ -169,6 +169,7 @@ return [
     */
 
     'attributes' => [
+        'cpf_cnpj' => 'CPF ou CNPJ',
         'address'   => 'Endereço',
         'address_number' => 'Número',
         'province'  => 'Bairro',
@@ -218,6 +219,16 @@ return [
         'blood_type' => 'tipo sanguíneo',
         'birth_date' => 'data de nascimento',
         'email' => 'E-mail',
+
+        'creditCard.holderName'  => 'Nome impresso no cartão',
+        'creditCard.number'      => 'Número do Cartão',
+        'creditCard.expiryMonth' => 'Mês de Validade',
+        'creditCard.expiryYear'  => 'Ano de validade',
+        'creditCard.ccv'         => 'Código (CVV)',
+
+        'cpfCnpj' => 'CPF ou CNPJ',
+        'addressNumber' => 'Número',
+        'postalCode' => 'CEP',
     ],
 
 ];

@@ -23,6 +23,7 @@
                     <button type="button" class="btn btn-success" @click="createPayment">Realizar Pagamento</button>
                 </div>
             </div>
+
             <table class="table">
                 <thead>
                     <tr class="table-header">
@@ -118,7 +119,7 @@
                                                     </div>
 
                                                     <div class="form-group col-sm-4 mb-2 pr-0">
-                                                        <label for="ccv">Código (CCV)</label>
+                                                        <label for="ccv">Código (CVV)</label>
                                                         <input id="ccv" v-model="credit_card.ccv" type="number" class="form-control">
                                                     </div>
                                                 </div>
@@ -142,7 +143,7 @@
 
                                         <div class="form-group mb-2">
                                             <label for="holder_cpf_cnpj">CPF / CNPJ</label>
-                                            <input v-model="holder.cpf_cnpj" id="holder_cpf_cnpj" placeholder="Ex: 11111111111 / 99999999999999" type="number" class="form-control">
+                                            <input v-model="holder.cpf_cnpj" id="holder_cpf_cnpj" type="number" class="form-control">
                                         </div>
                                         <div class="form-group mb-2">
                                             <label for="holder_name">Nome</label>
@@ -236,7 +237,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 </template>
@@ -258,7 +258,7 @@ export default {
             // Listagem dos pagamentos
             payments: [],
 
-            // Modal Pagamento
+            // Modal realizar pagamento
             values: [],
             types: [],
             cards: [],
@@ -461,6 +461,7 @@ export default {
 
             axios.post('/api/payments', data)
                 .then(response => {
+                    console.log(response.data);
                     this.modalClose('payment');
                     this.showPayment(response.data.id, response.data.billing_type);
                 })
@@ -476,13 +477,9 @@ export default {
                     }
                 });
         },
-
-        // Exibe os pagamentos
         showPayment(id, type){
-
             axios.get('/api/payments/'+id)
                 .then(response => {
-                    console.log('SUCCESS', response.data);
                     switch (type){
                         case 'PIX':
                             this.modal.pix = response.data;
@@ -500,15 +497,6 @@ export default {
                     let response = error.response;
                     alert(response.data);
                 });
-        },
-        showPaymentPix(id){
-
-        },
-        showPaymentBoleto(id){
-
-        },
-        showPaymentCreditCard(id){
-
         },
 
         // Atualizar dados
@@ -585,7 +573,7 @@ export default {
                 "text/plain": new Blob([texto], { type: "text/plain" })
             });
             navigator.clipboard.write([item]);
-            btn.innerText = "Copiado com sucesso!";
+            btn.innerText = "Copiado com sucesso";
             setTimeout(function() {btn.innerText = "Copiar código";}, 1500);
         },
 

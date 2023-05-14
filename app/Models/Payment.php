@@ -13,6 +13,8 @@ class Payment extends Model
         'billing_type',
         'due_date',
         'value',
+        'installment',
+        'installment_token',
         'description',
         'bank_slip_url',
         'status',

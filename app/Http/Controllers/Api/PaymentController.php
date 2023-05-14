@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Card;
 use App\Models\Client;
 use App\Models\Payment;
 use App\Services\AsaasService;
@@ -24,16 +25,22 @@ class PaymentController extends Controller
      * @var Payment
      */
     private $payment;
+    /**
+     * @var Card
+     */
+    private $card;
 
     public function __construct(
         AsaasService $asaasService,
         Client $client,
-        Payment $payment
+        Payment $payment,
+        Card $card
     )
     {
         $this->asaasService = $asaasService;
         $this->client = $client;
         $this->payment = $payment;
+        $this->card = $card;
     }
 
     /**
@@ -48,19 +55,16 @@ class PaymentController extends Controller
                 return response()->json('Pagamento não localizado.', 404);
             }
 
-            // Recupero o retorno
+            // Recupero o retorno do pagamento
             switch ($payment->billing_type){
                 case 'PIX':
                     $response = $this->asaasService->getPixQrCode($payment->asaas_id);
                     break;
                 case 'BOLETO':
-                    $response = [
-                        'status' => 200,
-                        'data'   => $payment->bank_slip_url,
-                    ];
+                    $response = ['status' => 200, 'data' => $payment->bank_slip_url];
                     break;
                 case 'CREDIT_CARD':
-                    $response = [];
+                    $response = ['status' => 200, 'data' => ''];
             }
 
             return response()->json($response['data'], $response['status']);
@@ -95,7 +99,7 @@ class PaymentController extends Controller
             if(!$request['type']){
                 $errors[] = 'Selecione a forma de pagamento.';
             }
-            elseif(!in_array($request['type'], ['PIX', 'BOLETO', 'CREDIT_CARD'])){
+            elseif(!in_array($request['type'], asaasGetTypes(true))){
                 $errors[] = 'Selecione uma forma de pagamento válida.';
             }
 
@@ -132,7 +136,7 @@ class PaymentController extends Controller
         // Cadastro com transação
         DB::beginTransaction();
 
-        // Cadastra o pagamento
+        // Cadastra o pagamento na base de dados
         $payment = $this->payment->create(
             asaasGetDataCreatePayment($client, $request)
         );
@@ -169,7 +173,7 @@ class PaymentController extends Controller
         // Cadastro com transação
         DB::beginTransaction();
 
-        // Cadastra o pagamento
+        // Cadastra o pagamento na base de dados
         $payment = $this->payment->create(
             asaasGetDataCreatePayment($client, $request)
         );
@@ -204,84 +208,179 @@ class PaymentController extends Controller
      */
     private function storeCreditCard($client, $request)
     {
-        dd('CARTÃO DE CRÉDITO', $request, $client);
+        // Cadastro com transação
+        DB::beginTransaction();
 
-        // Realiza o rollback das informações na base de dados
-        //DB::rollBack();
-    }
+        // Cadastra o pagamento na base de dados
+        $payment = $this->payment->create(
+            asaasGetDataCreatePayment($client, $request)
+        );
 
+        $dataHolderInfo = [];
+        $dataCreditCard = [];
 
-
-
-
-
-
-
-    /**
-     * Atualizar Cliente
-     */
-    public function update(Request $request, $id)
-    {
-        try {
-            $request = $request->all();
-
-            // Verifica se o cliente existe
-            $client = $this->client->find($id);
-            if (!$client) {
-                return response()->json('Cliente não encontrado.', 404);
+        // Recupera o token, caso seja um cartão já utilizado
+        // e cadastrado para esse cliente
+        if($request['card']){
+            $card = $this->card->find($request['card']);
+            if(!$card){
+                return [
+                    'status' => 422,
+                    'data' => '- Cartão de Crédito não localizado.'
+                ];
             }
+            $dataCreditCard = ['creditCardToken' => $card->token];
+        }
+        else{
+            $errorsCreditCard = '';
+            $errorsHolderInfo = '';
 
-            // Valida o formulário
-            $validate = Validator::make($request, [
-                'name'  => 'required|string|max:50',
-                'email' => 'required|string|email|max:50',
-                'phone' => 'required|string|min:11|max:11',
+            // Recupera os dados do cartão
+            $dataCreditCard = [
+                'creditCard' => [
+                    'holderName'  => $request['credit_card']['holder_name'],
+                    'number'      => $request['credit_card']['number'],
+                    'expiryMonth' => $request['credit_card']['expiry_month'],
+                    'expiryYear'  => $request['credit_card']['expiry_year'],
+                    'ccv'         => $request['credit_card']['ccv'],
+                ],
+            ];
 
-                'postal_code'    => 'required|string|min:8|max:8',
-                'address'        => 'required|string|max:100',
-                'province'       => 'required|string|max:50',
-                'address_number' => 'required|string|max:10',
-                'complement'     => 'max:50',
+            $validate = Validator::make($dataCreditCard, [
+                'creditCard.number'      => 'required|string|min:13|max:16',
+                'creditCard.holderName'  => 'required|string|max:50',
+                'creditCard.expiryMonth' => 'required|string|min:1|max:2',
+                'creditCard.expiryYear'  => 'required|string|min:4|max:4',
+                'creditCard.ccv'         => 'required|string|min:3|max:3',
             ]);
 
             if($validate->fails()){
-                return response()->json(formatValidate($validate->errors()), 422);
+                $errorsCreditCard = formatValidate($validate->errors());
             }
 
-            // Cadastra o cliente na ASAAS
-            if(!$client->asaas_id){
-                $response = $this->asaasService->createClient($request);
+            // Recupera as informações do titular do cartão
+            if($request['is_holder'] == 'yes'){
+                $dataHolderInfo = [
+                    'creditCardHolderInfo' => [
+                        'name'          => $client->name,
+                        'email'         => $client->email,
+                        'cpfCnpj'       => $client->cpf_cnpj,
+                        'phone'         => $client->phone,
 
-                if($response['status'] == 200){
-                    $client->asaas_id = $response['data']['id'];
-                    $client->save();
+                        'postalCode'    => $client->postal_code,
+                        'address'       => $client->address,
+                        'addressNumber' => $client->address_number,
+                        'complement'    => $client->complement,
+                        'province'      => $client->province,
+                    ],
+                ];
+            }
+            else {
+                $dataHolderInfo = [
+                    'creditCardHolderInfo' => [
+                        'name'          => $request['holder']['name'],
+                        'email'         => $request['holder']['email'],
+                        'cpfCnpj'       => $request['holder']['cpf_cnpj'],
+                        'phone'         => $request['holder']['phone'],
+
+                        'postalCode'    => $request['holder']['postal_code'],
+                        'address'       => $request['holder']['address'],
+                        'addressNumber' => $request['holder']['address_number'],
+                        'complement'    => $request['holder']['complement'],
+                        'province'      => $request['holder']['province'],
+                    ],
+                ];
+
+                $validate = Validator::make($dataHolderInfo['creditCardHolderInfo'], [
+                    'cpfCnpj'       => 'required|string|min:11|max:14',
+                    'name'          => 'required|string|max:50',
+                    'email'         => 'required|string|email|max:50',
+                    'phone'         => 'required|string|min:11|max:11',
+
+                    'postalCode'    => 'required|string|min:8|max:8',
+                    'address'       => 'required|string|max:100',
+                    'province'      => 'required|string|max:50',
+                    'addressNumber' => 'required|string|max:10',
+                    'complement'    => 'max:50',
+
+                ]);
+
+                if(!validateCpfCnpj($dataHolderInfo['creditCardHolderInfo']['cpfCnpj'])){
+                    $errorsHolderInfo = '- O campo CPF ou CNPJ é inválido.'.PHP_EOL;
                 }
-                else{
-                    return response()->json($response['data'], $response['status']);
+
+                if($validate->fails()){
+                    $errorsHolderInfo .= formatValidate($validate->errors());
                 }
             }
 
-            // Atualiza o cliente na ASAAS
-            else{
-                $response = $this->asaasService->updateClient($request, $client->asaas_id);
-
-                if($response['status'] != 200){
-                    return response()->json($response['data'], $response['status']);
-                }
+            // Caso tenha encontrado algum erro
+            if($errorsCreditCard || $errorsHolderInfo) {
+                $errors = implode(PHP_EOL, [$errorsCreditCard, $errorsHolderInfo]);
+                return [
+                    'status' => 422,
+                    'data'   => $errors,
+                ];
             }
-
-            // Atualiza o cliente na Base de Dados
-            unset($request['id']);
-            unset($request['asaas_id']);
-            unset($request['cpf_cnpj']);
-
-            $client->update($request);
-
-            return response()->json($client);
-
-        } catch (\Exception $e) {
-            return response()->json('Erro ao processar requisição.', 400);
         }
-    }
 
+        // Recupera as informações básicas da transção
+        $data = [
+            'externalReference' => $payment->id,
+            'customer'          => $payment->customer,
+            'billingType'       => $payment->billing_type,
+            'dueDate'           => $payment->due_date,
+            'description'       => $payment->description,
+        ];
+
+        // Validação do valor e parcelas
+        $dataValue = ['value' => $payment->value];
+
+        if($payment->installment){
+            $dataValue = [
+                'totalValue' => $payment->value,
+                'installmentCount' => $payment->installment,
+            ];
+        }
+
+        // Cadastra o pagamento na ASAAS
+        $data = array_merge($data, $dataValue, $dataCreditCard, $dataHolderInfo);
+
+        $response = $this->asaasService->paymentCreditCard($data);
+
+        if($response['status'] != 200){
+            return $response;
+        }
+
+        // Atualiza as informações do pagamento
+        $dataUpdate = [
+            'asaas_id' => $response['data']['id'],
+            'status'   => $response['data']['status'],
+        ];
+
+        if($payment->installment){
+            unset($dataUpdate['asaas_id']);
+            $dataUpdate['installment_token'] = $response['data']['installment'];
+        }
+
+        $payment->update($dataUpdate);
+
+        // Caso for um novo cartão utilizado nessa transação,
+        // cadastra o token dele para esse cliente
+        if(!$request['card']){
+            $this->card->create([
+                'client_id' => $client->id,
+                'name'      => "({$response['data']['creditCard']['creditCardNumber']}) {$response['data']['creditCard']['creditCardBrand']}",
+                'token'     => $response['data']['creditCard']['creditCardToken'],
+            ]);
+        }
+
+        // Persiste as informações na base de dados
+        DB::commit();
+
+        return [
+            'status' => 200,
+            'data'   => $payment->toArray(),
+        ];
+    }
 }

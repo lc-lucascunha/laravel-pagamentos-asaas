@@ -2066,7 +2066,7 @@ __webpack_require__.r(__webpack_exports__);
       },
       // Listagem dos pagamentos
       payments: [],
-      // Modal Pagamento
+      // Modal realizar pagamento
       values: [],
       types: [],
       cards: [],
@@ -2236,6 +2236,7 @@ __webpack_require__.r(__webpack_exports__);
         credit_card: this.credit_card
       };
       axios.post('/api/payments', data).then(function (response) {
+        console.log(response.data);
         _this2.modalClose('payment');
         _this2.showPayment(response.data.id, response.data.billing_type);
       })["catch"](function (error) {
@@ -2249,11 +2250,9 @@ __webpack_require__.r(__webpack_exports__);
         }
       });
     },
-    // Exibe os pagamentos
     showPayment: function showPayment(id, type) {
       var _this3 = this;
       axios.get('/api/payments/' + id).then(function (response) {
-        console.log('SUCCESS', response.data);
         switch (type) {
           case 'PIX':
             _this3.modal.pix = response.data;
@@ -2271,9 +2270,6 @@ __webpack_require__.r(__webpack_exports__);
         alert(response.data);
       });
     },
-    showPaymentPix: function showPaymentPix(id) {},
-    showPaymentBoleto: function showPaymentBoleto(id) {},
-    showPaymentCreditCard: function showPaymentCreditCard(id) {},
     // Atualizar dados
     fetchValues: function fetchValues() {
       var data = [];
@@ -2407,7 +2403,7 @@ __webpack_require__.r(__webpack_exports__);
         })
       });
       navigator.clipboard.write([item]);
-      btn.innerText = "Copiado com sucesso!";
+      btn.innerText = "Copiado com sucesso";
       setTimeout(function () {
         btn.innerText = "Copiar código";
       }, 1500);
@@ -3282,7 +3278,6 @@ var render = function render() {
     staticClass: "form-control",
     attrs: {
       id: "holder_cpf_cnpj",
-      placeholder: "Ex: 11111111111 / 99999999999999",
       type: "number"
     },
     domProps: {

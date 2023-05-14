@@ -22,6 +22,8 @@ class CreatePaymentsTable extends Migration
             $table->string('billing_type', 30)->nullable();
             $table->date('due_date')->nullable();
             $table->float('value')->nullable();
+            $table->integer('installment')->nullable();
+            $table->string('installment_token', 50)->nullable();
             $table->string('description')->nullable();
             $table->string('bank_slip_url')->nullable();
             $table->string('status', 30)->nullable();

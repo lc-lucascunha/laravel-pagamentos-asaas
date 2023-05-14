@@ -25,16 +25,14 @@ if (!function_exists('formatValidate')) {
     }
 }
 
-if (!function_exists('unformatCpfCnpj')) {
-    function unformatCpfCnpj($cpf_cnpj){
+if (!function_exists('formatOnlyNumber')) {
+    function formatOnlyNumber($cpf_cnpj){
         return trim(preg_replace('/[^0-9]/', '', $cpf_cnpj));
     }
 }
 
 if (!function_exists('validateCpfCnpj')) {
     function validateCpfCnpj($cpf_cnpj) {
-        // remove caracteres não-numéricos
-        $cpf_cnpj = unformatCpfCnpj($cpf_cnpj);
         if (strlen($cpf_cnpj) == 11) { // CPF
             // Calcula o primeiro dígito verificador
             $soma = 0;
