@@ -194,12 +194,15 @@
                                 </div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="submit" class="btn btn-success">
+                                <button v-if="!loading" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button v-if="!loading" type="submit" class="btn btn-success">
                                     <span v-if="payment_type == 'PIX'">Gerar QRCode para pagamento</span>
                                     <span v-else-if="payment_type == 'BOLETO'">Emitir boleto para pagamento</span>
                                     <span v-else>Finalizar Pagamento</span>
                                 </button>
+                                <div v-if="loading" class="btn btn-secondary">
+                                    Processando pagamento...
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -249,7 +252,7 @@
                         <div class="modal-header bg-success text-white" style="border-bottom: 0;">
                             <h5 class="modal-title" id="modal-credit_card-label">CARTÃO DE CRÉDITO - EXTRATO</h5>
                         </div>
-                        <div class="modal-body">
+                        <div class="modal-body p-0">
                             <table class="table table-striped">
                                 <thead>
                                     <tr class="table-header">
@@ -269,7 +272,7 @@
                                         <td class="text-center">{{ formatValue(payment.value) }}</td>
                                         <td class="text-center">{{ formatDueDate(payment.dueDate) }}</td>
                                         <td class="text-center">
-                                            {{ '('+payment.creditCard.creditCardNumber+') '+payment.creditCard.creditCardBrand }}
+                                            {{ formatCard(payment.creditCard.creditCardNumber, payment.creditCard.creditCardBrand) }}
                                         </td>
                                     </tr>
                                 </tbody>
@@ -293,6 +296,8 @@ export default {
     name: 'PaymentVue',
     data() {
         return {
+            loading: false,
+
             // Cliente
             canClient: false,
             client: {
@@ -407,6 +412,7 @@ export default {
 
         // Operações de pagamento
         createPayment() {
+            this.loading = false;
             this.fetchValues();
             this.fetchTypes();
             this.fetchCards();
@@ -421,6 +427,8 @@ export default {
             this.modalOpen('payment');
         },
         submitPayment() {
+            this.loading = true;
+
             let data = {
                 client       : this.client,
                 value_name   : this.getValueDescription(this.payment_value),
@@ -440,6 +448,7 @@ export default {
                     this.fetchPayments();
                 })
                 .catch(error => {
+                    this.loading = false;
                     let response = error.response;
                     switch (response.status){
                         case 422:
@@ -564,6 +573,12 @@ export default {
         formatDueDate(dueDate){
             dueDate = dueDate.split('-');
             return dueDate[2] + '/' + dueDate[1] + '/' + dueDate[0];
+        },
+        formatCard(creditCardNumber, creditCardBrand){
+            if(creditCardBrand == 'UNKNOWN'){
+                creditCardBrand = '';
+            }
+            return '('+creditCardNumber+') '+creditCardBrand;
         },
         formatInstallment(value, type, installment, installment_token){
             if(type !== 'CREDIT_CARD'){

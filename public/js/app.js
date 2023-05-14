@@ -2059,6 +2059,7 @@ __webpack_require__.r(__webpack_exports__);
   name: 'PaymentVue',
   data: function data() {
     return {
+      loading: false,
       // Cliente
       canClient: false,
       client: {
@@ -2160,6 +2161,7 @@ __webpack_require__.r(__webpack_exports__);
     },
     // Operações de pagamento
     createPayment: function createPayment() {
+      this.loading = false;
       this.fetchValues();
       this.fetchTypes();
       this.fetchCards();
@@ -2175,6 +2177,7 @@ __webpack_require__.r(__webpack_exports__);
     },
     submitPayment: function submitPayment() {
       var _this2 = this;
+      this.loading = true;
       var data = {
         client: this.client,
         value_name: this.getValueDescription(this.payment_value),
@@ -2191,6 +2194,7 @@ __webpack_require__.r(__webpack_exports__);
         _this2.showPayment(response.data.id, response.data.billing_type);
         _this2.fetchPayments();
       })["catch"](function (error) {
+        _this2.loading = false;
         var response = error.response;
         switch (response.status) {
           case 422:
@@ -2361,6 +2365,12 @@ __webpack_require__.r(__webpack_exports__);
     formatDueDate: function formatDueDate(dueDate) {
       dueDate = dueDate.split('-');
       return dueDate[2] + '/' + dueDate[1] + '/' + dueDate[0];
+    },
+    formatCard: function formatCard(creditCardNumber, creditCardBrand) {
+      if (creditCardBrand == 'UNKNOWN') {
+        creditCardBrand = '';
+      }
+      return '(' + creditCardNumber + ') ' + creditCardBrand;
     },
     formatInstallment: function formatInstallment(value, type, installment, installment_token) {
       if (type !== 'CREDIT_CARD') {
@@ -3441,18 +3451,20 @@ var render = function render() {
     }
   })])])]) : _vm._e()])]), _vm._v(" "), _c("div", {
     staticClass: "modal-footer"
-  }, [_c("button", {
+  }, [!_vm.loading ? _c("button", {
     staticClass: "btn btn-secondary",
     attrs: {
       type: "button",
       "data-bs-dismiss": "modal"
     }
-  }, [_vm._v("Cancelar")]), _vm._v(" "), _c("button", {
+  }, [_vm._v("Cancelar")]) : _vm._e(), _vm._v(" "), !_vm.loading ? _c("button", {
     staticClass: "btn btn-success",
     attrs: {
       type: "submit"
     }
-  }, [_vm.payment_type == "PIX" ? _c("span", [_vm._v("Gerar QRCode para pagamento")]) : _vm.payment_type == "BOLETO" ? _c("span", [_vm._v("Emitir boleto para pagamento")]) : _c("span", [_vm._v("Finalizar Pagamento")])])])])])])]), _vm._v(" "), _c("div", {
+  }, [_vm.payment_type == "PIX" ? _c("span", [_vm._v("Gerar QRCode para pagamento")]) : _vm.payment_type == "BOLETO" ? _c("span", [_vm._v("Emitir boleto para pagamento")]) : _c("span", [_vm._v("Finalizar Pagamento")])]) : _vm._e(), _vm._v(" "), _vm.loading ? _c("div", {
+    staticClass: "btn btn-secondary"
+  }, [_vm._v("\n                                Processando pagamento...\n                            ")]) : _vm._e()])])])])]), _vm._v(" "), _c("div", {
     staticClass: "modal fade",
     attrs: {
       id: "modal-pix",
@@ -3542,7 +3554,7 @@ var render = function render() {
   }, [_c("div", {
     staticClass: "modal-content"
   }, [_vm._m(7), _vm._v(" "), _c("div", {
-    staticClass: "modal-body"
+    staticClass: "modal-body p-0"
   }, [_c("table", {
     staticClass: "table table-striped"
   }, [_vm._m(8), _vm._v(" "), _c("tbody", _vm._l(_vm.modal.credit_card, function (payment) {
@@ -3556,7 +3568,7 @@ var render = function render() {
       staticClass: "text-center"
     }, [_vm._v(_vm._s(_vm.formatDueDate(payment.dueDate)))]), _vm._v(" "), _c("td", {
       staticClass: "text-center"
-    }, [_vm._v("\n                                        " + _vm._s("(" + payment.creditCard.creditCardNumber + ") " + payment.creditCard.creditCardBrand) + "\n                                    ")])]);
+    }, [_vm._v("\n                                        " + _vm._s(_vm.formatCard(payment.creditCard.creditCardNumber, payment.creditCard.creditCardBrand)) + "\n                                    ")])]);
   }), 0)])]), _vm._v(" "), _vm._m(9)])])])])]) : _vm._e();
 };
 var staticRenderFns = [function () {
