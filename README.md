@@ -70,7 +70,7 @@ Não se esqueça de definir as permissões (caso necessário) nas pasta /bootstr
 ```
 php artisan serve
 ```
-## Demonstração das telas
+## Demonstração das telas (Componentes)
 
 1. Cadastro do CLIENTE e listagem dos PAGAMENTOS desse cliente: 
 
