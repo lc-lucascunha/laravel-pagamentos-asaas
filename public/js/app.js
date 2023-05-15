@@ -3562,7 +3562,7 @@ var render = function render() {
       key: payment.id
     }, [_c("td", {
       "class": "text-center bg-status-" + payment.status
-    }, [_vm._v("\n                                        " + _vm._s(_vm.formatStatus(payment.status)) + "\n                                    ")]), _vm._v(" "), _c("td", [_vm._v(_vm._s(payment.description))]), _vm._v(" "), _c("td", {
+    }, [_vm._v("\n                                        " + _vm._s(_vm.formatStatus(payment.status)) + "\n                                    ")]), _vm._v(" "), _c("td", [_vm._v(_vm._s((!payment.installmentNumber ? "À Vista. " : "") + payment.description))]), _vm._v(" "), _c("td", {
       staticClass: "text-center"
     }, [_vm._v(_vm._s(_vm.formatValue(payment.value)))]), _vm._v(" "), _c("td", {
       staticClass: "text-center"
@@ -3658,7 +3658,7 @@ var staticRenderFns = [function () {
     attrs: {
       id: "modal-credit_card-label"
     }
-  }, [_vm._v("CARTÃO DE CRÉDITO - EXTRATO")])]);
+  }, [_vm._v("CARTÃO DE CRÉDITO - PARCELAS")])]);
 }, function () {
   var _vm = this,
     _c = _vm._self._c;

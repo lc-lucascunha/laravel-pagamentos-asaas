@@ -250,7 +250,7 @@
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header bg-success text-white" style="border-bottom: 0;">
-                            <h5 class="modal-title" id="modal-credit_card-label">CARTÃO DE CRÉDITO - EXTRATO</h5>
+                            <h5 class="modal-title" id="modal-credit_card-label">CARTÃO DE CRÉDITO - PARCELAS</h5>
                         </div>
                         <div class="modal-body">
                             <table class="table table-striped">
@@ -268,7 +268,7 @@
                                         <td :class="'text-center bg-status-'+payment.status">
                                             {{ formatStatus(payment.status) }}
                                         </td>
-                                        <td>{{ payment.description }}</td>
+                                        <td>{{(!payment.installmentNumber ? 'À Vista. ' : '')+payment.description}}</td>
                                         <td class="text-center">{{ formatValue(payment.value) }}</td>
                                         <td class="text-center">{{ formatDueDate(payment.dueDate) }}</td>
                                         <td class="text-center">
