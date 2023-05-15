@@ -1953,7 +1953,7 @@ __webpack_require__.r(__webpack_exports__);
     setClient: function setClient(client) {
       this.canClient = client ? true : false;
       this.client = client;
-      this.edit = this.client.asaas_id ? false : true;
+      this.edit = this.canClient && this.client.asaas_id ? false : true;
     },
     submitClient: function submitClient() {
       var _this2 = this;

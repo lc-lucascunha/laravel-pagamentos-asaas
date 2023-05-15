@@ -106,7 +106,7 @@ export default {
         setClient(client){
             this.canClient = (client ? true : false);
             this.client    = client;
-            this.edit      = (this.client.asaas_id ? false : true);
+            this.edit      = (this.canClient && this.client.asaas_id ? false : true);
         },
         submitClient() {
             this.loading = true;
