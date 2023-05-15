@@ -33,6 +33,10 @@ if (!function_exists('formatOnlyNumber')) {
 
 if (!function_exists('validateCpfCnpj')) {
     function validateCpfCnpj($cpf_cnpj) {
+        if (preg_match('/^(\d)\1*$/', $cpf_cnpj)) {
+            return false; // número repetido
+        }
+
         if (strlen($cpf_cnpj) == 11) { // CPF
             // Calcula o primeiro dígito verificador
             $soma = 0;
