@@ -252,7 +252,7 @@
                         <div class="modal-header bg-success text-white" style="border-bottom: 0;">
                             <h5 class="modal-title" id="modal-credit_card-label">CARTÃO DE CRÉDITO - EXTRATO</h5>
                         </div>
-                        <div class="modal-body p-0">
+                        <div class="modal-body">
                             <table class="table table-striped">
                                 <thead>
                                     <tr class="table-header">

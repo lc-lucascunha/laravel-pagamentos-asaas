@@ -3554,7 +3554,7 @@ var render = function render() {
   }, [_c("div", {
     staticClass: "modal-content"
   }, [_vm._m(7), _vm._v(" "), _c("div", {
-    staticClass: "modal-body p-0"
+    staticClass: "modal-body"
   }, [_c("table", {
     staticClass: "table table-striped"
   }, [_vm._m(8), _vm._v(" "), _c("tbody", _vm._l(_vm.modal.credit_card, function (payment) {
