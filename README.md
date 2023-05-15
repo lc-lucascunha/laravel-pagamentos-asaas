@@ -70,6 +70,25 @@ Não se esqueça de definir as permissões (caso necessário) nas pasta /bootstr
 ```
 php artisan serve
 ```
+## Demonstração das telas
 
+1. Cadastro do CLIENTE e listagem dos PAGAMENTOS desse cliente: 
 
+![Alt text](https://raw.githubusercontent.com/lc-lucascunha/laravel-pagamentos-asaas/master/public/images/git.png)
+
+2. Realizar pagamento por PIX, BOLETO ou CARTÃO DE CRÉDITO:
+
+![Alt text](https://raw.githubusercontent.com/lc-lucascunha/laravel-pagamentos-asaas/master/public/images/git2.png)
+
+3. Exibe o QRCode do PIX gerado para finalizar o pagamento:
+
+![Alt text](https://raw.githubusercontent.com/lc-lucascunha/laravel-pagamentos-asaas/master/public/images/git3.png)
+
+4. Exibe o Boleto gerado para finalizar o pagamento:
+
+![Alt text](https://raw.githubusercontent.com/lc-lucascunha/laravel-pagamentos-asaas/master/public/images/git4.png)
+
+5. Exibe o parcelamento do Cartão de Crédito:
+
+![Alt text](https://raw.githubusercontent.com/lc-lucascunha/laravel-pagamentos-asaas/master/public/images/git5.png)
 
